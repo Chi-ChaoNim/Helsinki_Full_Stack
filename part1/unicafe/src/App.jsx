@@ -22,8 +22,24 @@ const App = () => {
     setTotal(total + 1)
     setScore(score - 1)
   }
+  const resetAll = () => {
+    setGood(0)
+    setNeutral(0)
+    setBad(0)
+    setTotal(0)
+    setScore(0)
+  }
+
   const average = (score / total)
   const positive = ((good / total)*100)
+  const stats = {
+    good: good,
+    neutral: neutral,
+    bad: bad,
+    total: total,
+    average: average,
+    positive: positive
+  }
 
   return (
     <>
@@ -32,15 +48,8 @@ const App = () => {
         <Button onClick={handleGood} text="Good"/>
         <Button onClick={handleNeutral} text="Neutral"/>
         <Button onClick={handleBad} text="Bad"/>
-      </div>
-      <div>
-        <h1>Statistics</h1>
-        <p>Good {good}</p>
-        <p>Neutral {neutral}</p>
-        <p>Bad {bad}</p>
-        <p>Total {total}</p>
-        <p>Average {total === 0? 0 : average}</p>
-        <p>Positive {good=== 0? 0 : positive}%</p>
+        <Statistics stats={stats} />
+        <Button onClick={resetAll} text = "Reset" />
       </div>
     </>
     
@@ -52,5 +61,31 @@ const Button = ({onClick, text}) => {
     <button onClick={onClick}>{text}</button>
   )
 }
-
+const Statistics = ({stats}) => {
+  return (
+    <div>
+        <h1>Statistics</h1>
+        {stats.total === 0? "No feedback given " :
+        <table>
+            <StatisticsLine text="Good" value={stats.good}/>
+            <StatisticsLine text="Neutral" value={stats.neutral}/>
+            <StatisticsLine text="Bad" value={stats.bad}/>
+            <StatisticsLine text="Total" value={stats.total}/>
+            <StatisticsLine text="Average" value={stats.average}/>
+            <StatisticsLine text="Positive" value={stats.positive} symbol="%"/>
+        </table>
+        }
+    </div>
+  )
+}
+const StatisticsLine = ({text, value, symbol}) => {
+  return (
+    <tbody>
+      <tr>
+        <td>{text}</td>
+        <td>{value} {symbol}</td>
+      </tr>
+    </tbody>  
+  )
+}
 export default App
