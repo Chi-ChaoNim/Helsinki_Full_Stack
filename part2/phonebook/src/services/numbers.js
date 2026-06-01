@@ -8,10 +8,8 @@ const getAll = async () => {
         return request.then(response => response.data)
     } catch (error) {
         console.error(error)
-    } finally {
-        console.log("Request 'getAll' completed")
-    }
-};
+    };
+}
 
 const create = async (newObject) => {
     try {
@@ -19,8 +17,6 @@ const create = async (newObject) => {
         return request.then(response => response.data)
     } catch (error) {
         console.error(error)
-    } finally {
-        console.log("Request 'create' complete")
     }
 };
 
@@ -30,8 +26,6 @@ const update = async (id, newObject) => {
         return request.then(response => response.data)
     } catch (error) {
         console.error(error)
-    } finally {
-        console.log("Request 'update' complete")
     }
 };
    
@@ -39,13 +33,10 @@ const deleteRecord = async (id) => {
     try {
         const request = axios.delete(`${baseURL}/${id}`)
         return request.then(response => {
-            console.log("🚀 ~ deleteRecord ~ response.data:", response.data)
             return response.data;
         })
     } catch (error) {
         console.log(error)
-    } finally {
-        console.log("Request 'deleteRecord' complete")
     }
 } 
 

@@ -2,8 +2,23 @@
   "persons": [
     {
       "name": "Ian Luong",
-      "number": "55-55-5555558",
+      "number": "22-22-2222222",
       "id": "HzlBbSTXHe0"
+    },
+    {
+      "name": "Chi",
+      "number": "12-34-5678902",
+      "id": "8oKstugxBck"
+    },
+    {
+      "name": "Luis",
+      "number": "12-34-5678976",
+      "id": "b_GGCB0wcpI"
+    },
+    {
+      "name": "Tommy",
+      "number": "12-23-3456789",
+      "id": "oHNhmlAtomA"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
