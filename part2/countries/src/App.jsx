@@ -5,23 +5,40 @@ import countryService from "./services/countries";
 const App = () => {
   const [countries, setCountries] = useState([]);
   const [filterCountries, setFilterCountries] = useState("");
-
-  useEffect(() => {
-    countryService.getAll().then((response) => {
-      setCountries(response);
-    });
-  }, []);
+  const [weatherCondition, setWeatherCondition] = useState({});
 
   const filteredCountries = countries.filter((country) =>
     country.name.common.toLowerCase().includes(filterCountries.toLowerCase()),
   );
 
   const detailCountry = filteredCountries[0];
+  const arrLength = filteredCountries.length === 1;
+
+  useEffect(() => {
+    countryService.getAllCountries().then((response) => {
+      setCountries(response);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (filteredCountries.length === 1) {
+      const detailCountry = filteredCountries[0];
+      countryService
+        .getGeoLocal(detailCountry.capital, detailCountry.ccn3)
+        .then((response) => {
+          countryService
+            .getWeather(response[0].lat, response[0].lon)
+            .then((response) => {
+              setWeatherCondition(response);
+            });
+        });
+    }
+  }, [arrLength]);
 
   return (
     <>
       <form>
-        <label for="countrySearch">Search for a country: </label>
+        <label htmlFor="countrySearch">Search for a country: </label>
         <input
           type="search"
           id="countrySearch"
@@ -31,7 +48,7 @@ const App = () => {
       </form>
       <>
         {filteredCountries.length > 10 ? (
-          <p>To many matches, specifiy another filter</p>
+          <p>Too many matches, specifiy another filter</p>
         ) : (
           ""
         )}
@@ -42,7 +59,12 @@ const App = () => {
         )}
         {filteredCountries.length > 1 && filteredCountries.length < 11
           ? filteredCountries.map((country) => (
-              <p key={country.name.common}>{country.name.common}</p>
+              <div key={country.name.common}>
+                <p key={country.name.common}>{country.name.common}</p>{" "}
+                <button onClick={() => setFilterCountries(country.name.common)}>
+                  Show
+                </button>
+              </div>
             ))
           : ""}
         {filteredCountries.length === 1 ? (
@@ -57,6 +79,18 @@ const App = () => {
               ))}
             </ul>
             <img src={detailCountry.flags.png} alt={detailCountry.flags.alt} />
+            {Object.keys(weatherCondition).length > 0 ? (
+              <div>
+                <h2>{`Weather in ${detailCountry.capital}`}</h2>
+                <p>{`Temperature: ${weatherCondition.main.temp} °C`}</p>
+                <img
+                  src={`https://openweathermap.org/payload/api/media/file/${weatherCondition.weather[0].icon}.png`}
+                />
+                <p>{`Wind speed: ${weatherCondition.wind.speed} m/s`}</p>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         ) : (
           ""
