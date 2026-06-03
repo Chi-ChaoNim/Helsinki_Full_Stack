@@ -1,9 +1,18 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
 app.use(express.json());
 /*Json parser takes the JSON from the request and turns it into a JS object
 and attaches the data into a body property */
+
+app.use(
+  morgan(":method :url :res[content-length] - :response-time ms :JSONContent"),
+);
+
+morgan.token("JSONContent", function (req, res) {
+  return JSON.stringify(req.body);
+});
 
 let people = [
   {
