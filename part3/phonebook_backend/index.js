@@ -1,6 +1,10 @@
 const express = require("express");
 const app = express();
 
+app.use(express.json());
+/*Json parser takes the JSON from the request and turns it into a JS object
+and attaches the data into a body property */
+
 let people = [
   {
     id: "1",
@@ -43,6 +47,56 @@ app.get("/info", (request, response) => {
 
 app.get("/api/people", (request, response) => {
   response.json(people);
+});
+
+app.get("/api/people/:id", (request, response) => {
+  const id = request.params.id;
+  const person = people.find((person) => person.id === id);
+
+  if (person) {
+    response.json(person);
+  } else {
+    response.status(404).end();
+  }
+});
+
+app.delete("/api/people/:id", (request, response) => {
+  const id = request.params.id;
+  people = people.filter((person) => person.id !== id);
+
+  response.status(204).end();
+});
+
+const generateId = () => {
+  const randomId = Math.floor(Math.random() * 20000);
+  return String(randomId);
+};
+
+app.post("/api/people", (request, response) => {
+  const body = request.body;
+
+  if (!body.name) {
+    return response.status(400).json({
+      error: "name is missing",
+    });
+  } else if (!body.number) {
+    return response.status(400).json({
+      error: "number is missing",
+    });
+  } else if (people.find((person) => person.name === body.name)) {
+    return response.status(400).json({
+      error: "names but be unique",
+    });
+  }
+  const person = {
+    id: generateId(),
+    name: body.name,
+    number: body.number,
+  };
+
+  people = people.concat(person);
+
+  response.json(person);
 });
 
 const PORT = 3001;
