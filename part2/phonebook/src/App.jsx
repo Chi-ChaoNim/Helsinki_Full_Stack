@@ -39,7 +39,7 @@ const App = () => {
           .then((response) => {
             setPersons(
               persons.map((person) =>
-                person.id === foundPerson.id ? response : person,
+                person.id === response.id ? response : person,
               ),
             );
           })
@@ -78,10 +78,10 @@ const App = () => {
     if (window.confirm(`Delete this record? ${person.name}`)) {
       personServices
         .deleteRecord(person.id)
-        .then(() => {
-          setPersons(persons.filter((p) => p.id !== person.id));
+        .then((response) => {
+          setPersons(persons.filter((p) => p.id !== response.id));
           setNotificationSuccess(true);
-          setNotificationMessage(`Removed contact successfully.`);
+          setNotificationMessage(`Removed ${response.name} successfully.`);
           setTimeout(() => {
             setNotificationMessage(null);
           }, 5000);
