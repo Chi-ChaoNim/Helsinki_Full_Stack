@@ -5,6 +5,7 @@ const cors = require("cors");
 const Person = require("./models/person");
 const app = express();
 
+app.use(express.static("dist"));
 app.use(express.json());
 /*Json parser takes the JSON from the request and turns it into a JS object
 and attaches the data into a body property */
@@ -13,43 +14,20 @@ app.use(
   morgan(":method :url :res[content-length] - :response-time ms :JSONContent"),
 );
 app.use(cors());
-app.use(express.static("dist"));
 
 morgan.token("JSONContent", function (req, res) {
   return JSON.stringify(req.body);
 });
 
-let people = [
-  {
-    id: "1",
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: "2",
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: "3",
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: "4",
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
-
 app.get("/", (request, response) => {
   response.send("<h1>Phonebook Home</h1>");
 });
 
-app.get("/info", (request, response) => {
-  Person.countDocuments().then((phoneBookLength) => {
-    response.send(
-      `<div>
+app.get("/info", (request, response, next) => {
+  Person.countDocuments()
+    .then((phoneBookLength) => {
+      response.send(
+        `<div>
         <p>
             Phonebook has info for ${phoneBookLength} people
         </p>
@@ -57,40 +35,57 @@ app.get("/info", (request, response) => {
             ${new Date()}
         </p>
     </div>`,
-    );
-  });
+      );
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/people", (request, response) => {
-  Person.find({}).then((people) => {
-    response.json(people);
-  });
+app.get("/api/people", (request, response, next) => {
+  Person.find({})
+    .then((people) => {
+      response.json(people);
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/people/:id", (request, response) => {
-  Person.findById(request.params.id).then((person) => {
-    response.json(person);
-  });
+app.get("/api/people/:id", (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.put("/api/people/:id", (request, response) => {
+app.put("/api/people/:id", (request, response, next) => {
   const body = request.body;
-  console.log("🚀 ~ body:", body);
   const id = request.params.id;
-  console.log("🚀 ~ id:", id);
-  Person.findByIdAndUpdate(id, body).then(() => {
-    response.json(body);
-  });
+  Person.findById(id)
+    .then((person) => {
+      if (person) {
+        Person.updateOne(body).then(() => {
+          response.json(body);
+        });
+      } else {
+        response.status(400).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/people/:id", (request, response) => {
+app.delete("/api/people/:id", (request, response, next) => {
   const id = request.params.id;
-  Person.findByIdAndDelete(id).then((removedPerson) => {
-    response.json(removedPerson);
-  });
+  Person.findByIdAndDelete(id)
+    .then((removedPerson) => {
+      response.json(removedPerson);
+    })
+    .catch((error) => next(error));
 });
 
-app.post("/api/people", (request, response) => {
+app.post("/api/people", (request, response, next) => {
   const body = request.body;
 
   if (!body.name) {
@@ -107,10 +102,25 @@ app.post("/api/people", (request, response) => {
     number: body.number,
   });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
