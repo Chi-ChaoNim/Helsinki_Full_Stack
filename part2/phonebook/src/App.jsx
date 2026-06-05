@@ -27,15 +27,15 @@ const App = () => {
       name: newName,
       number: newNumber,
     };
-    const foundPerson = persons.find((person) => person.name === newName);
-    if (foundPerson) {
+    const foundName = persons.find((person) => person.name === newName);
+    if (foundName) {
       if (
         window.confirm(
           `${newName} is already in the phonebook, replace the old number with a new one?`,
         )
       ) {
         personServices
-          .update(foundPerson.id, personObject)
+          .update(foundName.id, personObject)
           .then((response) => {
             setPersons(
               persons.map((person) =>
@@ -60,16 +60,25 @@ const App = () => {
         return;
       }
     } else {
-      personServices.create(personObject).then((response) => {
-        setPersons(persons.concat(response));
-        setNotificationSuccess(true);
-        setNotificationMessage(`Added a new contact: ${personObject.name}`);
-        setTimeout(() => {
-          setNotificationMessage(null);
-        }, 5000);
-        setNewName("");
-        setNewNumber("");
-      });
+      personServices
+        .create(personObject)
+        .then((response) => {
+          setPersons(persons.concat(response));
+          setNotificationSuccess(true);
+          setNotificationMessage(`Added a new contact: ${personObject.name}`);
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+          setNewName("");
+          setNewNumber("");
+        })
+        .catch((error) => {
+          setNotificationSuccess(false);
+          setNotificationMessage(`${error.response.data.error}`);
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 10000);
+        });
     }
   };
 
@@ -91,6 +100,9 @@ const App = () => {
           setNotificationMessage(
             `Error: ${error}. This person has already been deleted.`,
           );
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
         });
     } else {
       return;
