@@ -14,8 +14,7 @@ app.use(
   morgan(":method :url :res[content-length] - :response-time ms :JSONContent"),
 );
 app.use(cors());
-
-morgan.token("JSONContent", function (req, res) {
+morgan.token("JSONContent", function (req) {
   return JSON.stringify(req.body);
 });
 
