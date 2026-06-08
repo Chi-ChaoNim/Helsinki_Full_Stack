@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from "react";
+import blogServices from "./services/blogServices";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [blogsList, setBlogsList] = useState([]);
+  const [newTitle, setNewTitle] = useState("");
+  const [newAuthor, setNewAuthor] = useState("");
+  const [newURL, setNewURL] = useState("");
+  const [newLikes, setNewLikes] = useState("");
+
+  useEffect(() => {
+    blogServices.getAll().then((response) => {
+      setBlogsList(response);
+    });
+  }, []);
+
+  const addBlog = (event) => {
+    event.preventDefault();
+    const newBlogObject = {
+      title: newTitle,
+      author: newAuthor,
+      url: newURL,
+      likes: newLikes,
+    };
+
+    blogServices
+      .addBlog(newBlogObject)
+      .then((response) => {
+        setBlogsList(blogsList.concat(response));
+        setNewTitle("");
+        setNewAuthor("");
+        setNewURL("");
+        setNewLikes(0);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const handleTitleChange = (event) => {
+    setNewTitle(event.target.value);
+  };
+  const handleAuthorChange = (event) => {
+    setNewAuthor(event.target.value);
+  };
+  const handleURLChange = (event) => {
+    setNewURL(event.target.value);
+  };
+  const handleLikeChange = (event) => {
+    setNewLikes(event.target.value);
+  };
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      <h1>Blog List App</h1>
+      <h2>Add a blog here:</h2>
+      <form onSubmit={addBlog}>
+        <label htmlFor="title">Title: </label>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          onChange={handleTitleChange}
+          value={newTitle}
+        />{" "}
+        <br></br>
+        <label htmlFor="author">Author: </label>
+        <input
+          type="text"
+          name="author"
+          onChange={handleAuthorChange}
+          value={newAuthor}
+        />{" "}
+        <br></br>
+        <label htmlFor="url">Link: </label>
+        <input
+          type="url"
+          name="url"
+          onChange={handleURLChange}
+          value={newURL}
+        />{" "}
+        <br></br>
+        <label htmlFor="likes">Likes: </label>
+        <input
+          type="number"
+          name="likes"
+          onChange={handleLikeChange}
+          value={newLikes}
+        />
+        <br></br>
+        <br></br>
+        <button type="submit">Submit</button>
+      </form>
+      <div>
+        {blogsList.length > 0
+          ? blogsList.map((blog) => {
+              return (
+                <div key={blog.id}>
+                  <h3>{blog.title}</h3>
+                  <h5>Author: {blog.author}</h5>
+                  <p>Link: {blog.url}</p>
+                  <p>Likes: {blog.likes}</p>
+                </div>
+              );
+            })
+          : "None available"}
+      </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
