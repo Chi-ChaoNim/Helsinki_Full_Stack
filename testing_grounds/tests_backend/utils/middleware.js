@@ -19,9 +19,22 @@ const errorHandler = (error, request, response, next) => {
     return response.status(400).send({ error: "malformated id" });
   } else if (error.name === "ValidationError") {
     return response.status(400).send({ error: error.message });
-  } else {
-    next(error);
+  } else if (
+    error.name === "MongoServerError" &&
+    error.message.includes("E11000 duplicate key error")
+  ) {
+    return response
+      .status(400)
+      .json({ error: "expected 'username' to be unique" });
+  } else if (error.name === "JsonWebTokenError") {
+    return response.status(401).json({ error: "token invalid" });
+  } else if (error.name === "TokenExpiredError") {
+    return response.status(401).json({
+      error: "token expired",
+    });
   }
+
+  next(error);
 };
 
 module.exports = {

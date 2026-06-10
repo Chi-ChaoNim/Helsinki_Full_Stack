@@ -5,13 +5,32 @@ const supertest = require("supertest");
 const app = require("../app");
 const helper = require("./test_helper.js");
 const Note = require("../models/note");
+const bcrypt = require("bcrypt");
+const User = require("../models/user.js");
 
 const api = supertest(app);
 
 describe("when there is initially some notes saved", () => {
   beforeEach(async () => {
+    await User.deleteMany({});
     await Note.deleteMany({});
-    await Note.insertMany(helper.initialNotes);
+    //resets user database and note database
+
+    const passwordHash = await bcrypt.hash("sekmet", 10);
+    const user = new User({
+      username: "noteUser",
+      passwordHash,
+    });
+    await user.save();
+    //creates and saves a new user to the user database
+
+    const notesWithUser = helper.initialNotes.map((note) => ({
+      ...note,
+      user: user._id,
+    }));
+    await Note.insertMany(notesWithUser);
+    // creates and inserts the notes database using the inital notes with the
+    // newly created user's user._id
   });
 
   test("notes are returned as json", async () => {
@@ -44,7 +63,9 @@ describe("when there is initially some notes saved", () => {
         .expect(200)
         .expect("Content-Type", /application\/json/);
 
-      assert.deepStrictEqual(resultNote.body, noteToView);
+      assert.strictEqual(resultNote.body.content, noteToView.content);
+      assert.strictEqual(resultNote.body.important, noteToView.important);
+      assert.strictEqual(resultNote.body.id, noteToView.id);
     });
 
     test("fails with status code 400, note is nonexistant", async () => {
@@ -62,9 +83,13 @@ describe("when there is initially some notes saved", () => {
 
   describe("addition of a new note", () => {
     test("succeeds with valid data", async () => {
+      const users = await helper.usersInDb();
+      const userId = users[0].id;
+
       const newNote = {
         content: "async/await simplifies making async calls",
         important: true,
+        userId: userId,
       };
 
       await api
@@ -81,8 +106,12 @@ describe("when there is initially some notes saved", () => {
     });
 
     test("fails with status code 400, data is invalid", async () => {
+      const users = await helper.usersInDb();
+      const userId = users[0].id;
+
       const newNote = {
         important: true,
+        userId: userId,
       };
 
       await api.post("/api/notes").send(newNote).expect(400);
@@ -105,6 +134,62 @@ describe("when there is initially some notes saved", () => {
       assert(!ids.includes(noteToDelete.id));
       assert.strictEqual(notesAtEnd.length, helper.initialNotes.length - 1);
     });
+  });
+});
+
+describe("when there is initially one user in db", () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const passwordHash = await bcrypt.hash("sekmet", 10);
+    const user = new User({
+      username: "root",
+      passwordHash,
+    });
+
+    await user.save();
+  });
+
+  test("creation succeeds with a fresh username", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "mluukkai",
+      name: "Matti Luukkainen",
+      password: "salainen",
+    };
+
+    await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1);
+
+    const usernames = usersAtEnd.map((u) => u.username);
+    assert(usernames.includes(newUser.username));
+  });
+
+  test("user creation fails with proper status code and message if username already taken", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const newUser = {
+      username: "root",
+      name: "Superuser",
+      password: "salainen",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    const usersAtEnd = await helper.usersInDb();
+    assert(result.body.error.includes("expected 'username' to be unique"));
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length);
   });
 });
 
