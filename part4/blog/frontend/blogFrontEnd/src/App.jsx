@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import blogServices from "./services/blogServices";
+import loginServices from "./services/loginServices";
+import LoginForm from "./components/LoginForm";
+import BlogForm from "./components/BlogForm";
+import Notification from "./components/Notification";
 
 function App() {
   const [blogsList, setBlogsList] = useState([]);
@@ -7,11 +11,25 @@ function App() {
   const [newAuthor, setNewAuthor] = useState("");
   const [newURL, setNewURL] = useState("");
   const [newLikes, setNewLikes] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
+  const [notificationMessage, setNotificationMessage] = useState(null);
+  const [notificationSuccess, setNotificationSuccess] = useState(true);
 
   useEffect(() => {
     blogServices.getAll().then((response) => {
       setBlogsList(response);
     });
+  }, []);
+
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON);
+      setUser(user);
+      blogServices.setToken(user.token);
+    }
   }, []);
 
   const addBlog = (event) => {
@@ -31,80 +49,92 @@ function App() {
         setNewAuthor("");
         setNewURL("");
         setNewLikes(0);
+        setNotificationSuccess(true);
+        setNotificationMessage(
+          `Added a blog: ${newBlogObject.title} // ${newBlogObject.author}`,
+        );
+        setTimeout(() => setNotificationMessage(null), 5000);
       })
       .catch((error) => {
-        console.error(error);
+        setNotificationSuccess(false);
+        setNotificationMessage(`Failed to add blog: ${error}`);
+        setTimeout(() => setNotificationMessage(null), 5000);
       });
   };
 
-  const handleTitleChange = (event) => {
-    setNewTitle(event.target.value);
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const user = await loginServices.login({ username, password });
+
+      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
+      blogServices.setToken(user.token);
+      setUser(user);
+      setUsername("");
+      setPassword("");
+      setNotificationSuccess(true);
+      setNotificationMessage(`Successfully logged in`);
+      setTimeout(() => setNotificationMessage(null), 5000);
+    } catch (error) {
+      setNotificationSuccess(false);
+      setNotificationMessage(`Failed to login: ${error}`);
+      setTimeout(() => setNotificationMessage(null), 5000);
+    }
   };
-  const handleAuthorChange = (event) => {
-    setNewAuthor(event.target.value);
-  };
-  const handleURLChange = (event) => {
-    setNewURL(event.target.value);
-  };
-  const handleLikeChange = (event) => {
-    setNewLikes(event.target.value);
+
+  const handleLogout = () => {
+    window.localStorage.clear();
+    setUser(null);
+    setNotificationSuccess(true);
+    setNotificationMessage(`Successfully logged out`);
   };
 
   return (
     <>
       <h1>Blog List App</h1>
-      <h2>Add a blog here:</h2>
-      <form onSubmit={addBlog}>
-        <label htmlFor="title">Title: </label>
-        <input
-          type="text"
-          name="title"
-          id="title"
-          onChange={handleTitleChange}
-          value={newTitle}
-        />{" "}
-        <br></br>
-        <label htmlFor="author">Author: </label>
-        <input
-          type="text"
-          name="author"
-          onChange={handleAuthorChange}
-          value={newAuthor}
-        />{" "}
-        <br></br>
-        <label htmlFor="url">Link: </label>
-        <input
-          type="url"
-          name="url"
-          onChange={handleURLChange}
-          value={newURL}
-        />{" "}
-        <br></br>
-        <label htmlFor="likes">Likes: </label>
-        <input
-          type="number"
-          name="likes"
-          onChange={handleLikeChange}
-          value={newLikes}
+      <Notification
+        message={notificationMessage}
+        notificationSuccess={notificationSuccess}
+      />
+      {!user && (
+        <LoginForm
+          handleLogin={handleLogin}
+          username={username}
+          setUsername={setUsername}
+          password={password}
+          setPassword={setPassword}
         />
-        <br></br>
-        <br></br>
-        <button type="submit">Submit</button>
-      </form>
-      <div>
-        {blogsList.length > 0
-          ? blogsList.map((blog) => {
-              return (
-                <div key={blog.id}>
-                  <h3>{blog.title}</h3>
-                  <h5>Author: {blog.author}</h5>
-                  <p>Link: {blog.url}</p>
-                  <p>Likes: {blog.likes}</p>
-                </div>
-              );
-            })
-          : "None available"}
-      </div>
+      )}
+      {user && (
+        <div>
+          <p>{user.name} logged in</p>
+          <button onClick={handleLogout}>Logout</button>
+          <div>
+            {blogsList.length > 0
+              ? blogsList.map((blog) => {
+                  return (
+                    <div key={blog.id}>
+                      <h4>
+                        {blog.title} // {blog.author}
+                      </h4>
+                    </div>
+                  );
+                })
+              : "None available"}
+          </div>
+          <BlogForm
+            addBlog={addBlog}
+            setNewTitle={setNewTitle}
+            newTitle={newTitle}
+            setNewAuthor={setNewAuthor}
+            newAuthor={newAuthor}
+            setNewURL={setNewURL}
+            newURL={newURL}
+            setNewLikes={setNewLikes}
+            newLikes={newLikes}
+          />
+        </div>
+      )}
     </>
   );
 }

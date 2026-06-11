@@ -2,24 +2,28 @@ import axios from "axios";
 
 const baseURL = "http://localhost:3003/api/blogs";
 
+let token = null;
+
+const setToken = (newToken) => {
+  token = `Bearer ${newToken}`;
+};
+
 const getAll = async () => {
   try {
-    const request = axios.get(baseURL);
-    return request.then((response) => response.data);
+    const response = await axios.get(baseURL);
+    return response.data;
   } catch (error) {
     console.error(error);
   }
 };
 
 const addBlog = async (newObject) => {
-  try {
-    const request = axios.post(baseURL, newObject);
-    return request.then((response) => {
-      return response.data;
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  const config = {
+    headers: { Authorization: token },
+  };
+
+  const response = await axios.post(baseURL, newObject, config);
+  return response.data;
 };
 
-export default { getAll, addBlog };
+export default { getAll, addBlog, setToken };
