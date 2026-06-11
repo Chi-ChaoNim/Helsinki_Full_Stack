@@ -10,27 +10,19 @@ const User = require("../models/user");
 
 const api = supertest(app);
 let initialUser;
-// refactor these damn test suites
 
 beforeEach(async () => {
   await Blog.deleteMany({});
   await User.deleteMany({});
 
   const passwordHash = await bcrypt.hash("sekmet", 10);
-  const user = new User({
-    username: "CupChunGae",
-    name: "Chi",
+  const makeUsers = helper.initialUsers.map((user) => ({
+    ...user,
     passwordHash,
-  });
-
-  initialUser = await user.save();
-
-  const blogsWithUser = helper.initialBlogs.map((blog) => ({
-    ...blog,
-    user: initialUser._id,
   }));
 
-  await Blog.insertMany(blogsWithUser);
+  await User.insertMany(makeUsers);
+  await Blog.insertMany(helper.initialBlogs);
 });
 
 describe("tests to check blog object properties", () => {
@@ -47,22 +39,33 @@ describe("tests to check blog object properties", () => {
     const blogsAtStart = await helper.blogsInDB();
     const blogToCheck = blogsAtStart[0];
     const blogKeys = Object.keys(blogToCheck);
+
     assert(blogKeys.includes("id"));
     assert(!blogKeys.includes("_id"));
   });
 
   test("a blog with valid details can be added", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
+
     const newBlog = {
       title: "Why Everyone's Car Prices Are Different",
       author: "Cy Radha",
       url: "https://api.mywebsite.io/home/welcome",
       likes: 3,
-      userId: initialUser._id.toString(),
     };
 
     await api
       .post("/api/blogs")
       .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -73,7 +76,7 @@ describe("tests to check blog object properties", () => {
     assert(titles.includes("Why Everyone's Car Prices Are Different"));
   });
 
-  test("blog creation fails when userId is missing", async () => {
+  test("attempting to create a blog without a token fails", async () => {
     const newBlog = {
       title: "Why Everyone's Car Prices Are Different",
       author: "Cy Radha",
@@ -81,20 +84,61 @@ describe("tests to check blog object properties", () => {
       likes: 3,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", "Bearer 533")
+      .expect(401)
+      .expect("Content-Type", /application\/json/);
+
+    assert(response.body.error.includes("token invalid"));
   });
 
+  // test.only("blog creation fails when userId is missing", async () => {
+  //   const usersAtStart = await helper.usersInDb();
+  //   const userOne = usersAtStart[0];
+
+  //   const loginResponse = await api
+  //     .post("/api/login")
+  //     .send({ username: userOne.username, password: "sekmet" })
+  //     .expect(200);
+
+  //   const loginToken = loginResponse.body.token;
+
+  //   const newBlog = {
+  //     title: "Why Everyone's Car Prices Are Different",
+  //     author: "Cy Radha",
+  //     url: "https://api.mywebsite.io/home/welcome",
+  //     likes: 3,
+  //   };
+
+  //   await api
+  //     .post("/api/blogs")
+  //     .send(newBlog)
+  //     .set("Authorization", `Bearer ${loginToken}`)
+  //     .expect(400);
+  // });
+
   test("missing likes property defaults to 0", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
     const newBlog = {
       title: "Why Everyone's Car Prices Are Different",
       author: "Cy Radha",
       url: "https://api.mywebsite.io/home/welcome",
-      userId: initialUser._id.toString(),
     };
 
     await api
       .post("/api/blogs")
       .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -105,110 +149,345 @@ describe("tests to check blog object properties", () => {
   });
 
   test("missing title property returns 400 bad request", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
     const newBlog = {
       author: "Cy Radha",
       url: "https://api.mywebsite.io/home/welcome",
       likes: 3,
-      userId: initialUser._id.toString(),
     };
 
-    await api
+    const response = await api
       .post("/api/blogs")
       .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
       .expect(400)
       .expect("Content-Type", /application\/json/);
+
+    assert(response.body.error.includes("Blog validation failed: title"));
   });
 
   test("missing url property returns 400 bad request", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
     const newBlog = {
       title: "Some random title that baits people into clicking",
       author: "Cy Radha",
       likes: 3,
-      userId: initialUser._id.toString(),
     };
 
-    await api
+    const response = await api
       .post("/api/blogs")
       .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
       .expect(400)
       .expect("Content-Type", /application\/json/);
+
+    assert(response.body.error.includes("Blog validation failed: url"));
   });
 });
 
 describe("tests to check deletion of blogs", () => {
   test("deletion of a blog", async () => {
-    const blogsAtStart = await helper.blogsInDB();
-    const blogToDelete = blogsAtStart[0];
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
+
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogId = response.body.id;
+
+    await api
+      .delete(`/api/blogs/${blogId}`)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(204);
 
     const blogsAtEnd = await helper.blogsInDB();
-    const ids = blogsAtEnd.map((b) => b.id);
+    const titles = blogsAtEnd.map((blog) => blog.title);
 
-    assert(!ids.includes(blogToDelete.id));
-    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+    assert(!titles.includes(newBlog.title));
   });
 
   test("attempt to delete blog with nonexistant id", async () => {
     const invalidId = "34hi9wuhvnn2085";
 
-    await api.delete(`/api/blogs/${invalidId}`).expect(400);
+    const response = await api.delete(`/api/blogs/${invalidId}`).expect(401);
 
     const blogsAtEnd = await helper.blogsInDB();
 
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
   });
+
+  test("attempt to delete a blog linked to another user", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+    const userTwo = usersAtStart[1];
+
+    const loginResponseOne = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginTokenOne = loginResponseOne.body.token;
+
+    const loginResponseTwo = await api
+      .post("/api/login")
+      .send({ username: userTwo.username, password: "sekmet" })
+      .expect(200);
+
+    const loginTokenTwo = loginResponseTwo.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
+
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginTokenOne}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogId = response.body.id;
+
+    const returningResponse = await api
+      .delete(`/api/blogs/${blogId}`)
+      .set("Authorization", `Bearer ${loginTokenTwo}`)
+      .expect(401);
+
+    const blogsAtEnd = await helper.blogsInDB();
+    const titles = blogsAtEnd.map((b) => b.title);
+
+    assert.strictEqual(returningResponse.status, 401);
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+    assert(titles.includes("Why Everyone's Car Prices Are Different"));
+  });
 });
 
 describe("tests to check the update method of blogs", () => {
   test("updating of a blog", async () => {
-    const blogsAtStart = await helper.blogsInDB();
-    const blogToUpdate = blogsAtStart[0];
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
 
-    blogToUpdate.likes = 100;
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
 
     const response = await api
-      .put(`/api/blogs/${blogToUpdate.id}`)
-      .send(blogToUpdate)
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
-    assert.strictEqual(response.body.likes, 100);
+    const blogId = response.body.id;
+
+    const updatedBlog = {
+      ...newBlog,
+      likes: 100,
+    };
+
+    const returnedResponse = await api
+      .put(`/api/blogs/${blogId}`)
+      .send(updatedBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    assert.strictEqual(returnedResponse.body.likes, 100);
   });
 
   test("updating of a blog with invalid id", async () => {
-    const blogsAtStart = await helper.blogsInDB();
-    const blogToUpdate = blogsAtStart[0];
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
 
-    blogToUpdate.likes = 100;
-    blogToUpdate.id = "navho2299mmss0";
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginToken = loginResponse.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
+
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogId = response.body.id;
+
+    const updatedBlog = {
+      ...newBlog,
+      likes: 100,
+    };
 
     await api
-      .put(`/api/blogs/${blogToUpdate.id}`)
-      .send(blogToUpdate)
-      .expect(400);
+      .delete(`/api/blogs/${blogId}`)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(204);
+
+    const returnedResponse = await api
+      .put(`/api/blogs/${blogId}`)
+      .send(updatedBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(404);
+
+    assert.strictEqual(returnedResponse.status, 404);
   });
 
   test("updating of a blog with missing data", async () => {
-    const blogsAtStart = await helper.blogsInDB();
-    const blogToUpdate = blogsAtStart[0];
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
 
-    blogToUpdate.likes = 100;
-    blogToUpdate.title = "";
-    blogToUpdate.url = "";
+    const loginResponse = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
 
-    await api
-      .put(`/api/blogs/${blogToUpdate.id}`)
-      .send(blogToUpdate)
-      .expect(400);
+    const loginToken = loginResponse.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
+
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogId = response.body.id;
+
+    const updatedBlog = {};
+
+    const returnedResponse = await api
+      .put(`/api/blogs/${blogId}`)
+      .send(updatedBlog)
+      .set("Authorization", `Bearer ${loginToken}`)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    assert.strictEqual(returnedResponse.status, 400);
+  });
+
+  test("attempt to update a blog linked to another user", async () => {
+    const usersAtStart = await helper.usersInDb();
+    const userOne = usersAtStart[0];
+    const userTwo = usersAtStart[1];
+
+    const loginResponseOne = await api
+      .post("/api/login")
+      .send({ username: userOne.username, password: "sekmet" })
+      .expect(200);
+
+    const loginTokenOne = loginResponseOne.body.token;
+
+    const loginResponseTwo = await api
+      .post("/api/login")
+      .send({ username: userTwo.username, password: "sekmet" })
+      .expect(200);
+
+    const loginTokenTwo = loginResponseTwo.body.token;
+
+    const newBlog = {
+      title: "Why Everyone's Car Prices Are Different",
+      author: "Cy Radha",
+      url: "https://api.mywebsite.io/home/welcome",
+      likes: 3,
+    };
+
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${loginTokenOne}`)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogId = response.body.id;
+
+    const updatedBlog = {
+      ...newBlog,
+      title: "13 Reasons Why Dogs Find You Unattractive",
+    };
+
+    const returningResponse = await api
+      .put(`/api/blogs/${blogId}`)
+      .send(updatedBlog)
+      .set("Authorization", `Bearer ${loginTokenTwo}`)
+      .expect(401);
+
+    const blogsAtEnd = await helper.blogsInDB();
+    const titles = blogsAtEnd.map((b) => b.title);
+
+    assert.strictEqual(returningResponse.status, 401);
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+    assert(titles.includes("Why Everyone's Car Prices Are Different"));
   });
 });
 
 describe("tests to check the create method of users", () => {
-  test("creation succeed with all valid details", async () => {
+  test("creation succeeds with all valid details", async () => {
     const usersAtStart = await helper.usersInDb();
     const newUser = {
-      username: "Windflint",
+      username: "Magicaw",
       name: "Ren",
       password: "chaosvhilla",
     };
@@ -228,10 +507,10 @@ describe("tests to check the create method of users", () => {
     assert(usernames.includes(newUser.username));
   });
 
-  test("creation fails when username not unique", async () => {
+  test(" username not unique", async () => {
     const usersAtStart = await helper.usersInDb();
     const newUser = {
-      username: "CupChunGae",
+      username: "Windflint",
       name: "Chi",
       password: "applebottomjeans",
     };
@@ -279,7 +558,6 @@ describe("tests to check the create method of users", () => {
       .send(newUser)
       .expect(400)
       .expect("Content-Type", /application\/json/);
-    console.log("🚀 ~ response:", response.body);
 
     const usersAtEnd = await helper.usersInDb();
 
