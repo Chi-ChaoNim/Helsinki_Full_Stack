@@ -57,11 +57,14 @@ blogsRouter.put(
   async (request, response) => {
     const { title, author, url, likes } = request.body;
 
-    const blog = await Blog.findById(request.params.id);
+    const blog = await Blog.findById(request.params.id).populate("user", {
+      username: 1,
+      name: 1,
+    });
 
     if (!blog) {
       response.status(404).end();
-    } else if (blog.user.toString() === request.user._id.toString()) {
+    } else {
       blog.title = title;
       blog.author = author;
       blog.url = url;
@@ -69,10 +72,6 @@ blogsRouter.put(
 
       const updatedBlog = await blog.save();
       response.status(201).json(updatedBlog);
-    } else {
-      response
-        .status(401)
-        .json({ error: "Unauthorized attempt to modify blog" });
     }
   },
 );
