@@ -5,6 +5,7 @@ import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
 import Toggleable from "./components/Toggleable";
+import BlogEntry from "./components/BlogEntry";
 
 function App() {
   const [blogsList, setBlogsList] = useState([]);
@@ -123,14 +124,6 @@ function App() {
     </Toggleable>
   );
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: "solid",
-    borderWidth: 1,
-    marginBottom: 5,
-  };
-
   return (
     <>
       <h1>Blog List App</h1>
@@ -150,34 +143,12 @@ function App() {
                   .sort((a, b) => b.likes - a.likes)
                   .map((blog) => {
                     return (
-                      <div key={blog.id} style={blogStyle}>
-                        <h4>
-                          {blog.title} // {blog.author}
-                          <Toggleable buttonLabel="View" buttonHide="Hide">
-                            {blog.url}
-                            <br />
-                            Likes: {blog.likes}{" "}
-                            <button
-                              onClick={(event) => {
-                                handleLikes(event, blog);
-                              }}
-                            >
-                              Like
-                            </button>
-                            <br />
-                            {blog.user.name}
-                            <br />
-                            <button
-                              onClick={() => {
-                                handleDelete(event, blog);
-                              }}
-                            >
-                              Delete
-                            </button>
-                            <br />
-                          </Toggleable>
-                        </h4>
-                      </div>
+                      <BlogEntry
+                        key={blog.id}
+                        blog={blog}
+                        handleLikes={handleLikes}
+                        handleDelete={handleDelete}
+                      />
                     );
                   })
               : "None available"}
