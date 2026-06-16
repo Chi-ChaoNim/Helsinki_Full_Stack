@@ -27,13 +27,15 @@ const BlogEntry = (props) => {
           </button>
           <br />
           {props.blog.user.name} <br />
-          <button
-            onClick={() => {
-              props.handleDelete(event, props.blog);
-            }}
-          >
-            Delete
-          </button>
+          {props.isOwner && (
+            <button
+              onClick={() => {
+                props.handleDelete(event, props.blog);
+              }}
+            >
+              Delete
+            </button>
+          )}
         </div>
       ) : (
         ""

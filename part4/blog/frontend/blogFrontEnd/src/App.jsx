@@ -102,6 +102,9 @@ function App() {
         .deleteBlog(blogToDelete)
         .then(() => {
           setBlogsList(blogsList.filter((blog) => blog.id !== blogToDelete.id));
+          setNotificationSuccess(true);
+          setNotificationMessage(`Successfully deleted blog`);
+          setTimeout(() => setNotificationMessage(null), 5000);
         })
         .catch((error) => {
           setNotificationSuccess(false);
@@ -131,7 +134,7 @@ function App() {
         message={notificationMessage}
         notificationSuccess={notificationSuccess}
       />
-      {!user && loginForm()}
+      {!user && <LoginForm userLogin={handleLogin} />}
       {user && (
         <div>
           <p>{user.name} logged in</p>
@@ -142,10 +145,12 @@ function App() {
               ? blogsList
                   .sort((a, b) => b.likes - a.likes)
                   .map((blog) => {
+                    const isOwner = blog.user.username === user.username;
                     return (
                       <BlogEntry
                         key={blog.id}
                         blog={blog}
+                        isOwner={isOwner}
                         handleLikes={handleLikes}
                         handleDelete={handleDelete}
                       />
