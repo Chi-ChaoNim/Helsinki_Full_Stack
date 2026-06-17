@@ -1,5 +1,6 @@
 const { test, expect, beforeEach, describe } = require("@playwright/test");
 const { loginWith, createBlog } = require("./helper");
+const { assert } = require("node:console");
 
 describe("Blog app", () => {
   beforeEach(async ({ page, request }) => {
@@ -39,7 +40,7 @@ describe("Blog app", () => {
           "Does God Hide In His Heaven?",
           "Tara Clements",
           "http://getintherobot.com",
-          "86",
+          "14",
         );
       });
 
@@ -109,28 +110,51 @@ describe("Blog app", () => {
             "1st position title",
             "1st position author",
             "http://1stpositionlink.com",
-            "154",
+            "15",
           );
           await createBlog(
             page,
             "3rd position title",
             "3rd position author",
             "http://3rdpositionlink.com",
-            "35",
+            "3",
           );
           await createBlog(
             page,
             "4th position title",
             "4th position author",
             "http://4thpositionlink.com",
-            "18",
+            "1",
           );
         });
 
         test("blogs are listed by descending like order", async ({ page }) => {
-          for (let i = 0; i < 4; i++) {
+          for (let i = 0; i < 2; i++) {
             await page.getByRole("button", { name: "View" }).first().click();
           }
+          await expect(
+            page.locator(".blog").first().getByText("Likes"),
+          ).toContainText("15");
+          await expect(
+            page.locator(".blog").nth(1).getByText("Likes"),
+          ).toContainText("14");
+          await page
+            .locator(".blog")
+            .nth(1)
+            .getByRole("button", { name: "Like" })
+            .click();
+          await page.waitForTimeout(1000);
+          await page
+            .locator(".blog")
+            .nth(1)
+            .getByRole("button", { name: "Like" })
+            .click();
+          await expect(
+            page.locator(".blog").first().getByText("Likes"),
+          ).toContainText("16");
+          await expect(
+            page.locator(".blog").nth(1).getByText("Likes"),
+          ).toContainText("15");
         });
       });
     });

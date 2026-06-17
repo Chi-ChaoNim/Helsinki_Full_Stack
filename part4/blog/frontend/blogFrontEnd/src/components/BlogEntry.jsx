@@ -11,7 +11,7 @@ const BlogEntry = (props) => {
   };
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className="blog">
       <h4>{props.blog.title}</h4>
       <h4>{props.blog.author}</h4>
       {visible ? (
