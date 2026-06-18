@@ -12,7 +12,7 @@ const BlogForm = ({ blogCreation }) => {
       title: newTitle,
       author: newAuthor,
       url: newURL,
-      likes: newLikes,
+      likes: Number(newLikes),
     });
 
     setNewTitle("");
@@ -57,7 +57,7 @@ const BlogForm = ({ blogCreation }) => {
           type="number"
           name="likes"
           id="likes"
-          onChange={({ target }) => setNewLikes(target.value)}
+          onChange={({ target }) => setNewLikes(Number(target.value))}
           value={newLikes}
         />
         <br></br>

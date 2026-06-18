@@ -9,7 +9,10 @@ import BlogEntry from "./components/BlogEntry";
 
 function App() {
   const [blogsList, setBlogsList] = useState([]);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
+    return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
+  });
   const [notificationMessage, setNotificationMessage] = useState(null);
   const [notificationSuccess, setNotificationSuccess] = useState(true);
 
@@ -20,13 +23,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON);
-      setUser(user);
+    if (user) {
       blogServices.setToken(user.token);
     }
-  }, []);
+  }, [user]);
 
   const addBlog = (newBlogObject) => {
     blogFormRef.current.toggleVisibility();
@@ -113,11 +113,6 @@ function App() {
         });
     }
   };
-  const loginForm = () => (
-    <Toggleable buttonLabel="Login">
-      <LoginForm userLogin={handleLogin} />
-    </Toggleable>
-  );
 
   const blogFormRef = useRef();
 
