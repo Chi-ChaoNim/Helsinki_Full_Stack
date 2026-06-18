@@ -1,22 +1,26 @@
 import { Link } from "react-router-dom";
+import { List, ListItem, ListItemText } from "@mui/material";
+
 const Home = ({ blogsList }) => {
   const sortedBlogsList = [...blogsList].sort((a, b) => b.likes - a.likes);
   return (
     <div>
-      <h1>Blogs</h1>
-      <ul>
+      <h3>Blogs</h3>
+      <List sx={{ background: "lightblue" }}>
         {blogsList.length > 0
           ? sortedBlogsList.map((blog) => {
               return (
-                <li key={blog.id}>
+                <ListItem key={blog.id}>
                   <Link to={`/blogs/${blog.id}`}>
-                    {blog.title} by {blog.author}
+                    <ListItemText>
+                      {blog.title} by {blog.author}
+                    </ListItemText>
                   </Link>
-                </li>
+                </ListItem>
               );
             })
           : "None available"}
-      </ul>
+      </List>
     </div>
   );
 };

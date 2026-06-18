@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
+import { Routes, Route, Link, useMatch } from "react-router-dom";
+import { Container, AppBar, Toolbar, Button } from "@mui/material";
+
 import noteService from "./services/notes";
 
-import { Routes, Route, Link, useMatch } from "react-router-dom";
 import NoteList from "./components/NoteList";
 import Home from "./components/Home";
 import Footer from "./components/Footer";
 import Note from "./components/note";
 import NoteForm from "./components/NoteForm";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [notes, setNotes] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     noteService.getAll().then((initalNotes) => {
@@ -24,6 +28,10 @@ const App = () => {
   const addNote = (noteObject) => {
     noteService.create(noteObject).then((returnedNote) => {
       setNotes(notes.concat(returnedNote));
+      setNotification({
+        text: `Note "${returnedNote.content}" added!`,
+        type: "success",
+      });
     });
   };
   const deleteNote = (id) => {
@@ -51,50 +59,54 @@ const App = () => {
       });
   };
 
-  const padding = {
-    padding: 5,
-  };
+  const style = { "&:hover": { bgcolor: "rgba(255,255,255,0.3" } };
 
   return (
-    <div>
+    <Container>
       <div>
-        <Link style={padding} to="/">
-          Home
-        </Link>
-        <Link style={padding} to="/notes">
-          Notes
-        </Link>
-        <Link style={padding} to="/create">
-          New note
-        </Link>
-      </div>
+        <AppBar position="static">
+          <Toolbar>
+            <Button color="inherit" component={Link} to="/" sx={style}>
+              Home
+            </Button>
+            <Button color="inherit" component={Link} to="/notes" sx={style}>
+              Notes
+            </Button>
+            <Button color="inherit" component={Link} to="/create" sx={style}>
+              New Note
+            </Button>
+          </Toolbar>
+        </AppBar>
 
-      <Routes>
-        <Route
-          path="/notes/:id"
-          element={
-            <Note
-              note={note}
-              toggleImportanceOf={toggleImportanceOf}
-              deleteNote={deleteNote}
-            />
-          }
-        />
-        <Route
-          path="/notes"
-          element={
-            <NoteList
-              notes={notes}
-              errorMessage={errorMessage}
-              setErrorMessage={setErrorMessage}
-            />
-          }
-        />
-        <Route path="/create" element={<NoteForm createNote={addNote} />} />
-        <Route path="/" element={<Home />} />
-      </Routes>
-      <Footer />
-    </div>
+        <Notification notification={notification} />
+
+        <Routes>
+          <Route
+            path="/notes/:id"
+            element={
+              <Note
+                note={note}
+                toggleImportanceOf={toggleImportanceOf}
+                deleteNote={deleteNote}
+              />
+            }
+          />
+          <Route
+            path="/notes"
+            element={
+              <NoteList
+                notes={notes}
+                errorMessage={errorMessage}
+                setErrorMessage={setErrorMessage}
+              />
+            }
+          />
+          <Route path="/create" element={<NoteForm createNote={addNote} />} />
+          <Route path="/" element={<Home />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Container>
   );
 };
 

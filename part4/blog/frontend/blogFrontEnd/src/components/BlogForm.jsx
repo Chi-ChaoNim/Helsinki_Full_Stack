@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, TextField } from "@mui/material";
 
 const BlogForm = ({ blogCreation }) => {
   const [newTitle, setNewTitle] = useState("");
@@ -23,46 +24,52 @@ const BlogForm = ({ blogCreation }) => {
 
   return (
     <div>
-      <h2>Add a blog here:</h2>
+      <h2>Create blog</h2>
       <form onSubmit={addBlog}>
-        <label htmlFor="title">Title: </label>
-        <input
-          type="text"
-          name="title"
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Title"
           id="title"
+          size="small"
+          margin="dense"
           onChange={({ target }) => setNewTitle(target.value)}
           value={newTitle}
         />{" "}
         <br></br>
-        <label htmlFor="author">Author: </label>
-        <input
-          type="text"
-          name="author"
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Author"
           id="author"
+          size="small"
+          margin="dense"
           onChange={({ target }) => setNewAuthor(target.value)}
           value={newAuthor}
         />{" "}
         <br></br>
-        <label htmlFor="url">Link: </label>
-        <input
-          type="url"
-          name="url"
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="URL"
+          size="small"
+          margin="dense"
           id="url"
           onChange={({ target }) => setNewURL(target.value)}
           value={newURL}
         />{" "}
         <br></br>
-        <label htmlFor="likes">Likes: </label>
+        {/* <label htmlFor="likes">Likes: </label>
         <input
           type="number"
           name="likes"
           id="likes"
           onChange={({ target }) => setNewLikes(Number(target.value))}
           value={newLikes}
-        />
-        <br></br>
-        <br></br>
-        <button type="submit">Submit</button>
+        /> */}
+        <Button variant="contained" type="submit">
+          Create
+        </Button>
       </form>
     </div>
   );

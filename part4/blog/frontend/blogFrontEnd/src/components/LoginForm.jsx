@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@mui/material";
 
 const LoginForm = ({ userLogin }) => {
   const [username, setUsername] = useState("");
@@ -38,7 +39,7 @@ const LoginForm = ({ userLogin }) => {
             />
           </label>
         </div>
-        <button type="submit">Login</button>
+        <Button variant="contained">Login</Button>
       </form>
     </div>
   );

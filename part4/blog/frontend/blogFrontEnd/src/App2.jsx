@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Container, AppBar, Toolbar, Button } from "@mui/material";
 
 import blogServices from "./services/blogServices";
 import loginServices from "./services/loginServices";
@@ -12,8 +13,7 @@ import Notification from "./components/Notification";
 
 const App2 = () => {
   const [blogsList, setBlogsList] = useState([]);
-  const [notificationSuccess, setNotificationSuccess] = useState(true);
-  const [notificationMessage, setNotificationMessage] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [user, setUser] = useState(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
     return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
@@ -31,31 +31,27 @@ const App2 = () => {
     });
   }, []);
 
-  const notifiTimeout = setTimeout(() => setNotificationMessage(null), 5000);
+  const notifiTimeout = setTimeout(() => setNotification(null), 5000);
 
   const addBlog = (newBlogObject) => {
     blogServices
       .addBlog(newBlogObject)
       .then((response) => {
         setBlogsList(blogsList.concat(response));
-        setNotificationSuccess(true);
-        setNotificationMessage(
-          `Added a blog: ${newBlogObject.title} // ${newBlogObject.author}`,
-        );
+        setNotification({
+          text: `A new blog: "${response.title} by ${response.author}" added`,
+          type: "success",
+        });
         notifiTimeout;
         navigate("/");
       })
       .catch((error) => {
-        setNotificationSuccess(false);
-        setNotificationMessage(
-          `Failed to add blog: ${error.response?.data?.error || error.message || String(error)}`,
-        );
+        setNotification({
+          text: `Failed to add blog: ${error.response?.data?.error || error.message || String(error)}`,
+          type: "error",
+        });
         notifiTimeout;
       });
-  };
-
-  const padding = {
-    padding: 5,
   };
 
   const navigate = useNavigate();
@@ -63,8 +59,7 @@ const App2 = () => {
   const handleLogout = () => {
     window.localStorage.clear();
     setUser(null);
-    setNotificationSuccess(true);
-    setNotificationMessage(`Successfully logged out`);
+    setNotification({ text: `Successfully logged out`, type: "success" });
     notifiTimeout;
     navigate("/");
   };
@@ -83,10 +78,10 @@ const App2 = () => {
         );
       })
       .catch((error) => {
-        setNotificationSuccess(false);
-        setNotificationMessage(
-          `Failed to update blog: ${error.response?.data?.error || error.message || String(error)}`,
-        );
+        setNotification({
+          text: `Failed to update blog: ${error.response?.data?.error || error.message || String(error)}`,
+          type: error,
+        });
         notifiTimeout;
       });
   };
@@ -102,16 +97,18 @@ const App2 = () => {
         .deleteBlog(blogToDelete)
         .then(() => {
           setBlogsList(blogsList.filter((blog) => blog.id !== blogToDelete.id));
-          setNotificationSuccess(true);
-          setNotificationMessage(`Successfully deleted blog`);
+          setNotification({
+            text: `Successfully deleted blog`,
+            type: "success",
+          });
           notifiTimeout;
           navigate("/");
         })
         .catch((error) => {
-          setNotificationSuccess(false);
-          setNotificationMessage(
-            `Failed to delete blog: ${error.response?.data?.error || error.message || String(error)}`,
-          );
+          setNotification({
+            text: `Failed to delete blog: ${error.response?.data?.error || error.message || String(error)}`,
+            type: "error",
+          });
           notifiTimeout;
         });
     }
@@ -123,44 +120,45 @@ const App2 = () => {
       window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
       blogServices.setToken(user.token);
       setUser(user);
-      setNotificationSuccess(true);
-      setNotificationMessage(`Successfully logged in`);
+      setNotification({ text: `Successfully logged in`, type: "success" });
       notifiTimeout;
       navigate("/");
     } catch (error) {
-      setNotificationSuccess(false);
-      setNotificationMessage(
-        `Failed to login: ${error.response?.data?.error || error.message || String(error)}`,
-      );
+      setNotification({
+        text: `Failed to login: ${error.response?.data?.error || error.message || String(error)}`,
+        type: "error",
+      });
       notifiTimeout;
     }
   };
 
+  const style = { "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } };
+
   return (
-    <div>
-      <div>
-        <Link style={padding} to="/">
-          Blogs
-        </Link>
-        {user && (
-          <Link style={padding} to="/create">
-            New blog
-          </Link>
-        )}
-        {user === null ? (
-          <Link style={padding} to="/login">
-            Login
-          </Link>
-        ) : (
-          <button style={padding} onClick={handleLogout}>
-            Logout
-          </button>
-        )}
-      </div>
-      <Notification
-        message={notificationMessage}
-        notificationSuccess={notificationSuccess}
-      />
+    <Container>
+      <AppBar position="static">
+        <Toolbar>
+          <h2>Blog App</h2>
+          <Button color="inherit" component={Link} to="/" sx={style}>
+            Blogs
+          </Button>
+          {user && (
+            <Button color="inherit" component={Link} to="/create" sx={style}>
+              New blog
+            </Button>
+          )}
+          {user === null ? (
+            <Button color="inherit" component={Link} to="/login" sx={style}>
+              Login
+            </Button>
+          ) : (
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
+          )}
+        </Toolbar>
+      </AppBar>
+      <Notification notification={notification} />
       <Routes>
         <Route path="/" element={<Home blogsList={blogsList} />} />
         <Route path="/create" element={<BlogForm blogCreation={addBlog} />} />
@@ -170,8 +168,7 @@ const App2 = () => {
             <Login
               user={user}
               setUser={setUser}
-              setNotificationMessage={setNotificationMessage}
-              setNotificationSuccess={setNotificationSuccess}
+              setNotificationMessage={setNotification}
               handleLogin={handleLogin}
               handleLogout={handleLogout}
             />
@@ -189,7 +186,7 @@ const App2 = () => {
           }
         />
       </Routes>
-    </div>
+    </Container>
   );
 };
 

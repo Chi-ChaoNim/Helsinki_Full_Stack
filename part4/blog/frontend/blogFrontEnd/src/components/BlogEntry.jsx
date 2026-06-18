@@ -1,11 +1,12 @@
 import { useParams } from "react-router-dom";
+import { Button } from "@mui/material";
 
 const BlogEntry = ({ user, blogs, handleLikes, handleDelete }) => {
   const id = useParams().id;
   const blog = blogs.find((b) => b.id === id);
   const blogStyle = {
     paddingTop: 10,
-    paddingLeft: 2,
+    paddingLeft: 10,
     border: "solid",
     borderWidth: 1,
     marginBottom: 5,
@@ -19,31 +20,37 @@ const BlogEntry = ({ user, blogs, handleLikes, handleDelete }) => {
 
   return (
     <div style={blogStyle} className="blog">
-      <h4>{blog.title}</h4>
+      <h3>{blog.title}</h3>
       <h4>{blog.author}</h4>
 
       <div>
         <p>{blog.url}</p>
-        <p>Likes: {blog.likes}</p>
+        <br />
+        Added by {blog.user.name} <br />
+        <p>{blog.likes} likes</p>
         {user && (
-          <button
+          <Button
+            color="success"
+            variant="outlined"
+            style={{ marginLeft: 10, marginRight: 10 }}
             onClick={() => {
               handleLikes(blog);
             }}
           >
             Like
-          </button>
+          </Button>
         )}
-        <br />
-        Added by {blog.user.name} <br />
         {isOwner && (
-          <button
+          <Button
+            color="error"
+            variant="outlined"
+            style={{ marginLeft: 10, marginRight: 10 }}
             onClick={() => {
               handleDelete(blog);
             }}
           >
             Delete
-          </button>
+          </Button>
         )}
       </div>
       <br />

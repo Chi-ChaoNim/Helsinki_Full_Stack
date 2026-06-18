@@ -1,15 +1,17 @@
 import "../../index.css";
+import { Alert } from "@mui/material";
 
-const Notification = ({ message, notificationSuccess }) => {
-  if (message === null) {
+const Notification = ({ notification }) => {
+  if (notification === null) {
     return null;
   } else {
     return (
-      <div
-        className={`${notificationSuccess === true ? "pNotification" : "nNotification"}`}
+      <Alert
+        style={{ marginTop: 10, marginBottom: 10 }}
+        severity={notification.type}
       >
-        {message}
-      </div>
+        {notification.text}
+      </Alert>
     );
   }
 };

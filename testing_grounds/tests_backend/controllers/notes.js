@@ -9,7 +9,10 @@ notesRouter.get("/", async (request, response) => {
 });
 
 notesRouter.get("/:id", async (request, response) => {
-  const note = await Note.findById(request.params.id);
+  const note = await Note.findById(request.params.id).populate("user", {
+    username: 1,
+    name: 1,
+  });
   if (note) {
     response.json(note);
   }
@@ -38,14 +41,14 @@ notesRouter.post("/", async (request, response) => {
   const note = new Note({
     content: body.content,
     important: body.important || false,
-    user: user._id,
   });
 
   const savedNote = await note.save();
-  user.notes = user.notes.concat(savedNote._id);
+  const attachedNote = savedNote.populate("user", { username: 1, name: 1 });
+  user.notes = user.notes.concat(attachedNote._id);
   await user.save();
 
-  response.status(201).json(savedNote);
+  response.status(201).json(attachedNote);
 });
 
 notesRouter.delete("/:id", async (request, response) => {
