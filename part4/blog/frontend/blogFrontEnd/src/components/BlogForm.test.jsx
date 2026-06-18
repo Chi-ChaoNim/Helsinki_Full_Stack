@@ -29,7 +29,7 @@ describe("<BlogForm />", () => {
       title: "New Title 1",
       author: "New Author 2",
       url: "http://somerandomlink.co.uk",
-      likes: "8",
+      likes: 8,
     });
   });
 });

@@ -13,9 +13,10 @@ describe("Blog app", () => {
       },
     });
     await page.goto("http://localhost:5173");
+    await page.getByRole("link", { name: "Login" }).click();
   });
 
-  test("Login form is shown", async ({ page }) => {
+  test("Login form is shown after clicking login", async ({ page }) => {
     await expect(page.getByText("Username:")).toBeVisible();
     await expect(page.getByText("Password:")).toBeVisible();
     await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
@@ -24,7 +25,8 @@ describe("Blog app", () => {
   describe("Login", () => {
     test("succeeds with correct credentials", async ({ page }) => {
       await loginWith(page, "Windflint", "hardchosenseren");
-      await expect(page.getByText("CupChunGae logged in")).toBeVisible();
+      await expect(page.getByText("Successfully logged in")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
     });
 
     test("fails with incorrect credentials", async ({ page }) => {
@@ -55,22 +57,22 @@ describe("Blog app", () => {
 
         await expect(page.getByText("Added a blog:")).toBeVisible();
         await expect(
-          page.getByRole("heading", { name: "13 Reasons Why No One" }),
-        ).toBeVisible();
+          page.getByRole("link", { name: "13 Reasons Why No One" }),
+        ).toContainText("13 Reasons Why No One Wants Your Candles");
         await expect(
-          page.getByRole("heading", { name: "Samwell Taryl" }),
-        ).toBeVisible();
+          page.getByRole("link", { name: "Samwell Taryl" }),
+        ).toContainText("Samwell Taryl");
       });
 
       test("a blog can be liked", async ({ page }) => {
-        await page.getByRole("button", { name: "View" }).click();
-        await expect(page.getByText("Likes: 86")).toBeVisible();
+        await page.getByRole("link", { name: "Does God Hide" }).click();
+        await expect(page.getByText("Likes: 14")).toBeVisible();
         await page.getByRole("button", { name: "Like" }).click();
-        await expect(page.getByText("Likes: 87")).toBeVisible();
+        await expect(page.getByText("Likes: 15")).toBeVisible();
       });
 
       test("a blog can be deleted", async ({ page }) => {
-        await page.getByRole("button", { name: "View" }).click();
+        await page.getByRole("link", { name: "Does God Hide" }).click();
         page.on("dialog", (dialog) => dialog.accept());
         await page.getByRole("button", { name: "Delete" }).click();
 
@@ -89,13 +91,14 @@ describe("Blog app", () => {
           });
           //make a secondary user
           await page.getByRole("button", { name: "Logout" }).click();
+          await page.getByRole("link", { name: "Login" }).click();
           await loginWith(page, "Guinsoo", "chaosgloom");
         });
 
         test("a blog owned by a different user cannot see the delete button", async ({
           page,
         }) => {
-          await page.getByRole("button", { name: "View" }).click();
+          await page.getByRole("link", { name: "Does God Hide" }).click();
           // delete button should not be rendered for a user who doesn't own the blog
           await expect(
             page.getByRole("button", { name: "Delete" }),
@@ -129,32 +132,21 @@ describe("Blog app", () => {
         });
 
         test("blogs are listed by descending like order", async ({ page }) => {
-          for (let i = 0; i < 2; i++) {
-            await page.getByRole("button", { name: "View" }).first().click();
-          }
-          await expect(
-            page.locator(".blog").first().getByText("Likes"),
-          ).toContainText("15");
-          await expect(
-            page.locator(".blog").nth(1).getByText("Likes"),
-          ).toContainText("14");
-          await page
-            .locator(".blog")
-            .nth(1)
-            .getByRole("button", { name: "Like" })
-            .click();
+          await page.getByRole("link", { name: "Blogs" }).click();
+          await expect(page.getByRole("listitem").first()).toBeVisible();
+          await page.getByRole("listitem").first().getByRole("link").click();
+          await expect(page.getByText("Likes")).toContainText("15");
+          await page.getByRole("link", { name: "Blogs" }).click();
+          await page.getByRole("listitem").nth(1).getByRole("link").click();
+          await expect(page.getByText("Likes")).toContainText("14");
+          await page.getByRole("button", { name: "Like" }).click();
           await page.waitForTimeout(1000);
-          await page
-            .locator(".blog")
-            .nth(1)
-            .getByRole("button", { name: "Like" })
-            .click();
-          await expect(
-            page.locator(".blog").first().getByText("Likes"),
-          ).toContainText("16");
-          await expect(
-            page.locator(".blog").nth(1).getByText("Likes"),
-          ).toContainText("15");
+          await page.getByRole("button", { name: "Like" }).click();
+          await page.waitForTimeout(1000);
+          await expect(page.getByText("Likes")).toContainText("16");
+          await page.getByRole("link", { name: "Blogs" }).click();
+          await page.getByRole("listitem").nth(1).getByRole("link").click();
+          await expect(page.getByText("Likes")).toContainText("15");
         });
       });
     });
