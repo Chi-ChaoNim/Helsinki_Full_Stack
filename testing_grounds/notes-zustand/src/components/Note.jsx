@@ -1,4 +1,4 @@
-import { useNoteActions } from "./store";
+import { useNoteActions } from "../store";
 
 const Note = ({ note }) => {
   const { toggleImportance } = useNoteActions();
