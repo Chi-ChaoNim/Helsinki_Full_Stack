@@ -1,4 +1,4 @@
-import { useAnecdoteActions } from "../store";
+import { useAnecdoteActions } from "../anecdoteStore";
 
 const FilterBar = () => {
   const { setFilter } = useAnecdoteActions();
