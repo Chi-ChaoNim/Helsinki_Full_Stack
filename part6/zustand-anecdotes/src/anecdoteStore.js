@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import anecdoteService from "./services/anecdotes";
 
-const useAnecdoteStore = create((set) => {
+export const useAnecdoteStore = create((set) => {
   return {
     anecdotes: [],
     filter: "",
     actions: {
-      initialize: (anecdotes) => set(() => ({ anecdotes })),
+      initialize: async () => {
+        const anecdotes = await anecdoteService.getAll();
+        set(() => ({ anecdotes }));
+      },
 
       create: (anecdote) =>
         set((state) => ({
@@ -47,7 +50,9 @@ export const useAnecdotes = () => {
   const anecdotes = useAnecdoteStore((state) => state.anecdotes);
   const filter = useAnecdoteStore((state) => state.filter) || "";
   const needle = filter.toLowerCase();
-  return anecdotes.filter((a) => a.content.toLowerCase().includes(needle));
+  return anecdotes
+    .filter((a) => a.content.toLowerCase().includes(needle))
+    .toSorted((a, b) => b.votes - a.votes);
 };
 export const useFilter = () => useAnecdoteStore((state) => state.filter);
 export const useAnecdoteActions = () =>
