@@ -11,7 +11,21 @@ export const useAnecdotes = () => {
     });
   }, []);
 
+  const addAnecdote = (content) => {
+    anecdoteService.createNew(content).then((returning) => {
+      setAnecdotes([...anecdotes, returning]);
+    });
+  };
+
+  const deleteAnecdote = (id) => {
+    anecdoteService.remove(id).then(() => {
+      setAnecdotes(anecdotes.filter((a) => a.id !== id));
+    });
+  };
+
   return {
     anecdotes,
+    addAnecdote,
+    deleteAnecdote,
   };
 };
