@@ -5,16 +5,6 @@ const Login = ({ user, handleLogin, handleLogout }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // const handleLogin = (event) => {
-  //   event.preventDefault();
-  //   userLogin({
-  //     username,
-  //     password,
-  //   });
-
-  //   setUsername("");
-  //   setPassword("");
-  // };
   return (
     <section>
       <h1>Login to application</h1>

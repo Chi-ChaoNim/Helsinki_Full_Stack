@@ -1,5 +1,7 @@
 import { useState, useEffect, useReducer } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Container, AppBar, Toolbar, Button } from "@mui/material";
 
 import blogServices from "./services/blogServices";
@@ -30,7 +32,7 @@ function notifiReducer(notification, action) {
 }
 
 const App2 = () => {
-  const [blogsList, setBlogsList] = useState([]);
+  const queryClient = useQueryClient();
   const [notification, dispatch] = useReducer(notifiReducer, null);
   const [user, setUser] = useState(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
@@ -43,11 +45,44 @@ const App2 = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    blogServices.getAll().then((response) => {
-      setBlogsList(response);
-    });
-  }, []);
+  const result = useQuery({
+    queryKey: ["blogs"],
+    queryFn: blogServices.getAll,
+  });
+
+  const newBlogMutation = useMutation({
+    mutationFn: blogServices.addBlog,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+    },
+    onError: (error) => {
+      notifiNegative("Failed to add blog", error);
+    },
+  });
+
+  const likeBlogMutation = useMutation({
+    mutationFn: blogServices.updateBlog,
+    onSuccess: (newBlogObject) => {
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      notifiPositive(
+        `A new blog: "${newBlogObject.title} by ${newBlogObject.author}" added`,
+      );
+    },
+    onError: (error) => {
+      notifiNegative("Failed to update blog", error);
+    },
+  });
+
+  const deleteBlogMutation = useMutation({
+    mutationFn: blogServices.deleteBlog,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      notifiPositive("Successfully deleted blog");
+    },
+    onError: (error) => {
+      notifiNegative("Failed to delete blog", error);
+    },
+  });
 
   function notifiPositive(text) {
     dispatch({
@@ -73,24 +108,6 @@ const App2 = () => {
   useEffect(() => {
     setTimeout(() => notifiReset(), 5000);
   }, [notification]);
-  //   if (typeof error === "undefined") {
-  //     error = null;
-  //   }
-
-  //   if (error !== null) {
-  //     setNotification({
-  //       text: `${text}: ${error.response?.data?.error || error.message || String(error)}`,
-  //       type,
-  //     });
-  //     setTimeout(() => setNotification(null), 5000);
-  //   }
-
-  //   setNotification({
-  //     text,
-  //     type,
-  //   });
-  //   setTimeout(() => setNotification(null), 5000);
-  // };
 
   const navigate = useNavigate();
 
@@ -116,18 +133,8 @@ const App2 = () => {
   };
 
   const addBlog = (newBlogObject) => {
-    blogServices
-      .addBlog(newBlogObject)
-      .then((response) => {
-        setBlogsList(blogsList.concat(response));
-        notifiPositive(
-          `A new blog: "${response.title} by ${response.author}" added`,
-        );
-        navigate("/");
-      })
-      .catch((error) => {
-        notifiNegative("Failed to add blog", error);
-      });
+    newBlogMutation.mutate(newBlogObject);
+    navigate("/");
   };
 
   const handleLikes = (blog) => {
@@ -136,16 +143,7 @@ const App2 = () => {
       ...blog,
       likes: blog.likes + 1,
     };
-    blogServices
-      .updateBlog(updatedObject)
-      .then((response) => {
-        setBlogsList(
-          blogsList.map((blog) => (blog.id === response.id ? response : blog)),
-        );
-      })
-      .catch((error) => {
-        notifiNegative("Failed to update blog", error);
-      });
+    likeBlogMutation.mutate(updatedObject);
   };
 
   const handleDelete = (blogToDelete) => {
@@ -155,20 +153,18 @@ const App2 = () => {
         `Are you sure you want to delete ${blogToDelete.title} by ${blogToDelete.author}`,
       )
     ) {
-      blogServices
-        .deleteBlog(blogToDelete)
-        .then(() => {
-          setBlogsList(blogsList.filter((blog) => blog.id !== blogToDelete.id));
-          notifiPositive("Successfully deleted blog");
-          navigate("/");
-        })
-        .catch((error) => {
-          notifiNegative("Failed to delete blog", error);
-        });
+      deleteBlogMutation.mutate(blogToDelete);
+      navigate("/");
     }
   };
 
   const style = { "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } };
+
+  if (result.isPending) {
+    return <div>Loading data...</div>;
+  }
+
+  const blogsList = result.data;
 
   return (
     <Container>
