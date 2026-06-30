@@ -1,0 +1,162 @@
+import { useState, useEffect, useRef } from "react";
+import blogServices from "./services/blogServices";
+import loginServices from "./services/loginServices";
+import LoginForm from "./components/LoginForm";
+import BlogForm from "./components/BlogForm";
+import Notification from "./components/Notification";
+import Toggleable from "./components/Toggleable";
+import BlogEntry from "./components/BlogEntry";
+
+function App() {
+  const [blogsList, setBlogsList] = useState([]);
+  const [user, setUser] = useState(() => {
+    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
+    return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
+  });
+  const [notificationMessage, setNotificationMessage] = useState(null);
+  const [notificationSuccess, setNotificationSuccess] = useState(true);
+
+  useEffect(() => {
+    blogServices.getAll().then((response) => {
+      setBlogsList(response);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      blogServices.setToken(user.token);
+    }
+  }, [user]);
+
+  const addBlog = (newBlogObject) => {
+    blogFormRef.current.toggleVisibility();
+    blogServices
+      .addBlog(newBlogObject)
+      .then((response) => {
+        setBlogsList(blogsList.concat(response));
+        setNotificationSuccess(true);
+        setNotificationMessage(
+          `Added a blog: ${newBlogObject.title} // ${newBlogObject.author}`,
+        );
+        setTimeout(() => setNotificationMessage(null), 5000);
+      })
+      .catch((error) => {
+        setNotificationSuccess(false);
+        setNotificationMessage(`Failed to add blog: ${error}`);
+        setTimeout(() => setNotificationMessage(null), 5000);
+      });
+  };
+
+  const handleLogin = async ({ username, password }) => {
+    try {
+      const user = await loginServices.login({ username, password });
+
+      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
+      blogServices.setToken(user.token);
+      setUser(user);
+      setNotificationSuccess(true);
+      setNotificationMessage(`Successfully logged in`);
+      setTimeout(() => setNotificationMessage(null), 5000);
+    } catch (error) {
+      setNotificationSuccess(false);
+      setNotificationMessage(`Failed to login: ${error}`);
+      setTimeout(() => setNotificationMessage(null), 5000);
+    }
+  };
+
+  const handleLogout = () => {
+    window.localStorage.clear();
+    setUser(null);
+    setNotificationSuccess(true);
+    setNotificationMessage(`Successfully logged out`);
+  };
+
+  const handleLikes = (event, blog) => {
+    event.preventDefault();
+    const updatedObject = {
+      ...blog,
+      likes: blog.likes + 1,
+    };
+    blogServices
+      .updateBlog(updatedObject)
+      .then((response) => {
+        setBlogsList(
+          blogsList.map((blog) => (blog.id === response.id ? response : blog)),
+        );
+      })
+      .catch((error) => {
+        setNotificationSuccess(false);
+        setNotificationMessage(`Failed to update blog: ${error}`);
+        setTimeout(() => setNotificationMessage(null), 5000);
+      });
+  };
+
+  const handleDelete = (event, blogToDelete) => {
+    event.preventDefault();
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${blogToDelete.title} by ${blogToDelete.author}`,
+      )
+    ) {
+      blogServices
+        .deleteBlog(blogToDelete)
+        .then(() => {
+          setBlogsList(blogsList.filter((blog) => blog.id !== blogToDelete.id));
+          setNotificationSuccess(true);
+          setNotificationMessage(`Successfully deleted blog`);
+          setTimeout(() => setNotificationMessage(null), 5000);
+        })
+        .catch((error) => {
+          setNotificationSuccess(false);
+          setNotificationMessage(`Failed to delete blog: ${error}`);
+          setTimeout(() => setNotificationMessage(null), 5000);
+        });
+    }
+  };
+
+  const blogFormRef = useRef();
+
+  const blogForm = () => (
+    <Toggleable buttonLabel="New blog" ref={blogFormRef}>
+      <BlogForm blogCreation={addBlog} />
+    </Toggleable>
+  );
+
+  return (
+    <>
+      <h1>Blog List App</h1>
+      <Notification
+        message={notificationMessage}
+        notificationSuccess={notificationSuccess}
+      />
+      {!user && <LoginForm userLogin={handleLogin} />}
+      {user && (
+        <div>
+          <p>{user.name} logged in</p>
+          <button onClick={handleLogout}>Logout</button>
+          {blogForm()}
+          <div>
+            {blogsList.length > 0
+              ? blogsList
+                  .sort((a, b) => b.likes - a.likes)
+                  .map((blog) => {
+                    const isOwner = blog.user.username === user.username;
+                    return (
+                      <BlogEntry
+                        key={blog.id}
+                        blog={blog}
+                        isOwner={isOwner}
+                        handleLikes={handleLikes}
+                        handleDelete={handleDelete}
+                      />
+                    );
+                  })
+              : "None available"}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default App;

@@ -1,0 +1,74 @@
+{"blogList" : [
+    {
+      "id": 1,
+      "title": "7 Tips You Need to Know Before Opening Your Speakeasy",
+      "author": "Rina Yimo",
+      "url": "https://api.coolapp.org/contact",
+      "likes": 6
+    },
+    {
+      "id": 2,
+      "title": "20 Free Things You Must Do in Kansas City This Year",
+      "author": "Nkosinathi Bertrando",
+      "url": "https://www.mywebsite.dev/contact",
+      "likes": 23
+    },
+    {
+      "id": 3,
+      "title": "Why Everyone Is Talking About These 30-Minute Recipes",
+      "author": "Donnchad Neso",
+      "url": "http://app.mywebsite.net/products",
+      "likes": 1
+    },
+    {
+      "id": 4,
+      "title": "Why Everyone's Gas Prices Are Different",
+      "author": "Cy Radha",
+      "url": "https://api.mywebsite.io/home",
+      "likes": 98
+    },
+    {
+      "id": 5,
+      "title": "The Yoga Practice That Will Brighten Your Day",
+      "author": "Herut Marley",
+      "url": "http://app.mywebsite.com/login",
+      "likes": 12
+    },
+    {
+      "id": 6,
+      "title": "13 False Claims About Soy",
+      "author": "Hugubert Venetia",
+      "url": "http://api.demo.io/home",
+      "likes": 54
+    },
+    {
+      "id": 7,
+      "title": "Why Becoming a Successful Tailor Is Less Daunting Than You Think",
+      "author": "Gotam Yu",
+      "url": "http://blog.testsite.org/login",
+      "likes": 8
+    },
+    {
+      "id": 8,
+      "title": "15 Things You Should Be Doing as a Professional Tutor",
+      "author": "Zaiden Volodya",
+      "url": "http://app.testsite.dev/dashboard",
+      "likes": 43
+    },
+    {
+      "id": 9,
+      "title": "How To Become a Tutor in 2025",
+      "author": "Hidemi Vanda",
+      "url": "http://shop.mywebsite.com/products",
+      "likes": 90
+    },
+    {
+      "id": 10,
+      "title": "Workout 101: The Ultimate Guide for Beginners",
+      "author": "Iracema Leslawa",
+      "url": "http://www.demo.io/services",
+      "likes": 61
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

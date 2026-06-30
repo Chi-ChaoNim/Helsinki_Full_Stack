@@ -1,0 +1,17 @@
+.pNotification {
+    font-size: 15px;
+    background-color: lightgray;
+    border: 2px solid green;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-bottom: 20px;
+}
+
+.nNotification {
+    font-size: 15px;
+    background-color: lightgray;
+    border: 2px solid red;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-bottom: 20px;
+}

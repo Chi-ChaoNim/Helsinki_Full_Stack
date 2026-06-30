@@ -1,0 +1,15 @@
+{
+    "scripts": {
+        "build": "esbuild src/main.jsx --bundle --minify --sourcemap --outfile=dist/main.js --jsx=automatic",
+        "serve": "npx serve dist",
+        "dev": "esbuild src/main.jsx --bundle --outfile=dist/main.js --jsx=automatic --servedir=./dist --watch"
+    },
+    "dependencies": {
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-legacy": "^8.1.0",
+        "esbuild": "^0.28.1"
+    }
+}
