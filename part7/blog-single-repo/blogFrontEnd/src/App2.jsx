@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { Container, AppBar, Toolbar, Button } from "@mui/material";
 
@@ -12,9 +12,26 @@ import BlogEntry from "./components/BlogEntry";
 import Notification from "./components/Notification";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+function notifiReducer(notification, action) {
+  switch (action.type) {
+    case "success": {
+      return { text: action.text, type: action.type };
+    }
+    case "error": {
+      return {
+        text: `${action.text}: ${action.error}`,
+        type: action.type,
+      };
+    }
+    case "reset": {
+      return null;
+    }
+  }
+}
+
 const App2 = () => {
   const [blogsList, setBlogsList] = useState([]);
-  const [notification, setNotification] = useState(null);
+  const [notification, dispatch] = useReducer(notifiReducer, null);
   const [user, setUser] = useState(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
     return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
@@ -32,7 +49,48 @@ const App2 = () => {
     });
   }, []);
 
-  const notifiTimeout = setTimeout(() => setNotification(null), 5000);
+  function notifiPositive(text) {
+    dispatch({
+      type: "success",
+      text,
+    });
+  }
+
+  function notifiNegative(text, error) {
+    dispatch({
+      type: "error",
+      text,
+      error,
+    });
+  }
+
+  function notifiReset() {
+    dispatch({
+      type: "reset",
+    });
+  }
+
+  useEffect(() => {
+    setTimeout(() => notifiReset(), 5000);
+  }, [notification]);
+  //   if (typeof error === "undefined") {
+  //     error = null;
+  //   }
+
+  //   if (error !== null) {
+  //     setNotification({
+  //       text: `${text}: ${error.response?.data?.error || error.message || String(error)}`,
+  //       type,
+  //     });
+  //     setTimeout(() => setNotification(null), 5000);
+  //   }
+
+  //   setNotification({
+  //     text,
+  //     type,
+  //   });
+  //   setTimeout(() => setNotification(null), 5000);
+  // };
 
   const navigate = useNavigate();
 
@@ -43,23 +101,17 @@ const App2 = () => {
       window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
       blogServices.setToken(user.token);
       setUser(user);
-      setNotification({ text: `Successfully logged in`, type: "success" });
-      notifiTimeout;
+      notifiPositive("Successfully logged in");
       navigate("/");
     } catch (error) {
-      setNotification({
-        text: `Failed to login: ${error.response?.data?.error || error.message || String(error)}`,
-        type: "error",
-      });
-      notifiTimeout;
+      notifiNegative("Failed to login", error);
     }
   };
 
   const handleLogout = () => {
     window.localStorage.clear();
     setUser(null);
-    setNotification({ text: `Successfully logged out`, type: "success" });
-    notifiTimeout;
+    notifiPositive("Successfully logged out");
     navigate("/");
   };
 
@@ -68,19 +120,13 @@ const App2 = () => {
       .addBlog(newBlogObject)
       .then((response) => {
         setBlogsList(blogsList.concat(response));
-        setNotification({
-          text: `A new blog: "${response.title} by ${response.author}" added`,
-          type: "success",
-        });
-        notifiTimeout;
+        notifiPositive(
+          `A new blog: "${response.title} by ${response.author}" added`,
+        );
         navigate("/");
       })
       .catch((error) => {
-        setNotification({
-          text: `Failed to add blog: ${error.response?.data?.error || error.message || String(error)}`,
-          type: "error",
-        });
-        notifiTimeout;
+        notifiNegative("Failed to add blog", error);
       });
   };
 
@@ -98,11 +144,7 @@ const App2 = () => {
         );
       })
       .catch((error) => {
-        setNotification({
-          text: `Failed to update blog: ${error.response?.data?.error || error.message || String(error)}`,
-          type: error,
-        });
-        notifiTimeout;
+        notifiNegative("Failed to update blog", error);
       });
   };
 
@@ -117,19 +159,11 @@ const App2 = () => {
         .deleteBlog(blogToDelete)
         .then(() => {
           setBlogsList(blogsList.filter((blog) => blog.id !== blogToDelete.id));
-          setNotification({
-            text: `Successfully deleted blog`,
-            type: "success",
-          });
-          notifiTimeout;
+          notifiPositive("Successfully deleted blog");
           navigate("/");
         })
         .catch((error) => {
-          setNotification({
-            text: `Failed to delete blog: ${error.response?.data?.error || error.message || String(error)}`,
-            type: "error",
-          });
-          notifiTimeout;
+          notifiNegative("Failed to delete blog", error);
         });
     }
   };
@@ -184,8 +218,6 @@ const App2 = () => {
             <ErrorBoundary>
               <Login
                 user={user}
-                setUser={setUser}
-                setNotificationMessage={setNotification}
                 handleLogin={handleLogin}
                 handleLogout={handleLogout}
               />
