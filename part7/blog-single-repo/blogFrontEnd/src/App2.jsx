@@ -7,7 +7,8 @@ import { Container } from "@mui/material";
 
 import blogServices from "./services/blogServices";
 import loginServices from "./services/loginServices";
-import userServices from "./services/persistentUser";
+import userServices from "./services/userServices";
+import localUser from "./services/persistentUser";
 
 import NotificationContext from "./NotificationContext";
 import UserContext from "./UserContext";
@@ -18,6 +19,8 @@ import BlogForm from "./components/BlogForm";
 import BlogEntry from "./components/BlogEntry";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
+import UserList from "./components/UserList";
+import UserEntry from "./components/UserEntry";
 
 const App2 = () => {
   const queryClient = useQueryClient();
@@ -25,9 +28,14 @@ const App2 = () => {
   const { notifiPositive, notifiNegative } = useContext(NotificationContext);
   const { setUser } = useContext(UserContext);
 
-  const result = useQuery({
+  const blogsResult = useQuery({
     queryKey: ["blogs"],
     queryFn: blogServices.getAll,
+  });
+
+  const usersResult = useQuery({
+    queryKey: ["users"],
+    queryFn: userServices.getAll,
   });
 
   const newBlogMutation = useMutation({
@@ -71,7 +79,7 @@ const App2 = () => {
     try {
       const user = await loginServices.login({ username, password });
 
-      userServices.saveUser("loggedBlogappUser", user);
+      localUser.saveUser("loggedBlogappUser", user);
       blogServices.setToken(user.token);
       setUser(user);
       notifiPositive("Successfully logged in");
@@ -82,7 +90,7 @@ const App2 = () => {
   };
 
   const handleLogout = () => {
-    userServices.removeUser("loggedBlogappUser");
+    localUser.removeUser("loggedBlogappUser");
     setUser(null);
     notifiPositive("Successfully logged out");
     navigate("/");
@@ -114,11 +122,12 @@ const App2 = () => {
     }
   };
 
-  if (result.isPending) {
+  if (blogsResult.isPending || usersResult.isPending) {
     return <div>Loading data...</div>;
   }
 
-  const blogsList = result.data;
+  const blogsList = blogsResult.data;
+  const userList = usersResult.data;
 
   return (
     <Container>
@@ -157,6 +166,22 @@ const App2 = () => {
                 handleLikes={handleLikes}
                 handleDelete={handleDelete}
               />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ErrorBoundary>
+              <UserList users={userList} />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/users/:id"
+          element={
+            <ErrorBoundary>
+              <UserEntry users={userList} />
             </ErrorBoundary>
           }
         />
