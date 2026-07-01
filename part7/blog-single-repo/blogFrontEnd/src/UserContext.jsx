@@ -1,11 +1,12 @@
 import { createContext, useState, useEffect } from "react";
 import blogServices from "./services/blogServices";
+import userServices from "./services/persistentUser";
 
 const UserContext = createContext();
 
 export const UserContextProvider = (props) => {
   const [user, setUser] = useState(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
+    const loggedUserJSON = userServices.getUser("loggedBlogappUser");
     return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
   });
 

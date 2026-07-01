@@ -7,6 +7,7 @@ import { Container } from "@mui/material";
 
 import blogServices from "./services/blogServices";
 import loginServices from "./services/loginServices";
+import userServices from "./services/persistentUser";
 
 import NotificationContext from "./NotificationContext";
 import UserContext from "./UserContext";
@@ -70,7 +71,7 @@ const App2 = () => {
     try {
       const user = await loginServices.login({ username, password });
 
-      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
+      userServices.setUser("loggedBlogappUser", user);
       blogServices.setToken(user.token);
       setUser(user);
       notifiPositive("Successfully logged in");
@@ -81,7 +82,7 @@ const App2 = () => {
   };
 
   const handleLogout = () => {
-    window.localStorage.clear();
+    userServices.removeUser("loggedBlogappUser");
     setUser(null);
     notifiPositive("Successfully logged out");
     navigate("/");

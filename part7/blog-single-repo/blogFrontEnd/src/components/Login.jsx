@@ -6,7 +6,7 @@ import UserContext from "../UserContext";
 const Login = ({ handleLogin, handleLogout }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const user = useContext(UserContext);
+  const { user } = useContext(UserContext);
 
   return (
     <section>

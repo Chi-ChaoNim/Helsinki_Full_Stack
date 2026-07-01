@@ -4,7 +4,7 @@ import { useContext } from "react";
 import UserContext from "../UserContext";
 
 const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
-  const user = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const id = useParams().id;
   const blog = blogs.find((b) => b.id === id);
   const blogStyle = {

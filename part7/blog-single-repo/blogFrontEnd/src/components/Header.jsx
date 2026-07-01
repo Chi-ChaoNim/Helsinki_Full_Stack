@@ -7,7 +7,7 @@ import UserContext from "../UserContext";
 
 export const Header = ({ handleLogout }) => {
   const style = { "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } };
-  const user = useContext(UserContext);
+  const { user } = useContext(UserContext);
 
   return (
     <div>
