@@ -1,7 +1,10 @@
 import { useParams } from "react-router-dom";
 import { Button } from "@mui/material";
+import { useContext } from "react";
+import UserContext from "../UserContext";
 
-const BlogEntry = ({ user, blogs, handleLikes, handleDelete }) => {
+const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
+  const user = useContext(UserContext);
   const id = useParams().id;
   const blog = blogs.find((b) => b.id === id);
   const blogStyle = {
