@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Button, TextField } from "@mui/material";
+import { useContext } from "react";
+import UserContext from "../UserContext";
 
-const Login = ({ user, handleLogin, handleLogout }) => {
+const Login = ({ handleLogin, handleLogout }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { user } = useContext(UserContext);
 
   return (
     <section>

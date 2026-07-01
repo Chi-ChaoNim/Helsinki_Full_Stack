@@ -1,49 +1,29 @@
-import { useState, useEffect, useReducer } from "react";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { Container, AppBar, Toolbar, Button } from "@mui/material";
+import { Container } from "@mui/material";
 
 import blogServices from "./services/blogServices";
 import loginServices from "./services/loginServices";
+import userServices from "./services/persistentUser";
+
+import NotificationContext from "./NotificationContext";
+import UserContext from "./UserContext";
 
 import Home from "./components/Home";
 import Login from "./components/Login";
 import BlogForm from "./components/BlogForm";
 import BlogEntry from "./components/BlogEntry";
-import Notification from "./components/Notification";
 import ErrorBoundary from "./components/ErrorBoundary";
-
-function notifiReducer(notification, action) {
-  switch (action.type) {
-    case "success": {
-      return { text: action.text, type: action.type };
-    }
-    case "error": {
-      return {
-        text: `${action.text}: ${action.error}`,
-        type: action.type,
-      };
-    }
-    case "reset": {
-      return null;
-    }
-  }
-}
+import { Header } from "./components/Header";
 
 const App2 = () => {
   const queryClient = useQueryClient();
-  const [notification, dispatch] = useReducer(notifiReducer, null);
-  const [user, setUser] = useState(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    return loggedUserJSON ? JSON.parse(loggedUserJSON) : null;
-  });
 
-  useEffect(() => {
-    if (user) {
-      blogServices.setToken(user.token);
-    }
-  }, [user]);
+  const { notifiPositive, notifiNegative } = useContext(NotificationContext);
+  const { setUser } = useContext(UserContext);
 
   const result = useQuery({
     queryKey: ["blogs"],
@@ -52,8 +32,11 @@ const App2 = () => {
 
   const newBlogMutation = useMutation({
     mutationFn: blogServices.addBlog,
-    onSuccess: () => {
+    onSuccess: (newBlogObject) => {
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      notifiPositive(
+        `A new blog: "${newBlogObject.title} by ${newBlogObject.author}" added`,
+      );
     },
     onError: (error) => {
       notifiNegative("Failed to add blog", error);
@@ -62,11 +45,9 @@ const App2 = () => {
 
   const likeBlogMutation = useMutation({
     mutationFn: blogServices.updateBlog,
-    onSuccess: (newBlogObject) => {
+    onSuccess: (updatedObject) => {
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      notifiPositive(
-        `A new blog: "${newBlogObject.title} by ${newBlogObject.author}" added`,
-      );
+      notifiPositive(`Liked a blog: ${updatedObject.title}`);
     },
     onError: (error) => {
       notifiNegative("Failed to update blog", error);
@@ -84,38 +65,13 @@ const App2 = () => {
     },
   });
 
-  function notifiPositive(text) {
-    dispatch({
-      type: "success",
-      text,
-    });
-  }
-
-  function notifiNegative(text, error) {
-    dispatch({
-      type: "error",
-      text,
-      error,
-    });
-  }
-
-  function notifiReset() {
-    dispatch({
-      type: "reset",
-    });
-  }
-
-  useEffect(() => {
-    setTimeout(() => notifiReset(), 5000);
-  }, [notification]);
-
   const navigate = useNavigate();
 
   const handleLogin = async ({ username, password }) => {
     try {
       const user = await loginServices.login({ username, password });
 
-      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
+      userServices.saveUser("loggedBlogappUser", user);
       blogServices.setToken(user.token);
       setUser(user);
       notifiPositive("Successfully logged in");
@@ -126,7 +82,7 @@ const App2 = () => {
   };
 
   const handleLogout = () => {
-    window.localStorage.clear();
+    userServices.removeUser("loggedBlogappUser");
     setUser(null);
     notifiPositive("Successfully logged out");
     navigate("/");
@@ -158,8 +114,6 @@ const App2 = () => {
     }
   };
 
-  const style = { "&:hover": { bgcolor: "rgba(255,255,255,0.3)" } };
-
   if (result.isPending) {
     return <div>Loading data...</div>;
   }
@@ -168,29 +122,7 @@ const App2 = () => {
 
   return (
     <Container>
-      <AppBar position="static">
-        <Toolbar>
-          <h2>Blog App</h2>
-          <Button color="inherit" component={Link} to="/" sx={style}>
-            Blogs
-          </Button>
-          {user && (
-            <Button color="inherit" component={Link} to="/create" sx={style}>
-              New blog
-            </Button>
-          )}
-          {user === null ? (
-            <Button color="inherit" component={Link} to="/login" sx={style}>
-              Login
-            </Button>
-          ) : (
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
-      <Notification notification={notification} />
+      <Header handleLogout={handleLogout} />
       <Routes>
         <Route
           path="/"
@@ -212,21 +144,15 @@ const App2 = () => {
           path="/login"
           element={
             <ErrorBoundary>
-              <Login
-                user={user}
-                handleLogin={handleLogin}
-                handleLogout={handleLogout}
-              />
+              <Login handleLogin={handleLogin} handleLogout={handleLogout} />
             </ErrorBoundary>
           }
         />
-        <Route path="/blogs/*" element={<h2>404: Page not found</h2>} />
         <Route
           path="/blogs/:id"
           element={
             <ErrorBoundary>
               <BlogEntry
-                user={user}
                 blogs={blogsList}
                 handleLikes={handleLikes}
                 handleDelete={handleDelete}

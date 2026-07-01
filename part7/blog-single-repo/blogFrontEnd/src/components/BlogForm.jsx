@@ -1,25 +1,19 @@
-import { useState } from "react";
 import { Button, TextField } from "@mui/material";
+import useField from "../hooks/useField";
 
 const BlogForm = ({ blogCreation }) => {
-  const [newTitle, setNewTitle] = useState("");
-  const [newAuthor, setNewAuthor] = useState("");
-  const [newURL, setNewURL] = useState("");
-  const [newLikes, setNewLikes] = useState(0);
+  const title = useField("text");
+  const author = useField("text");
+  const url = useField("text");
 
   const addBlog = (event) => {
     event.preventDefault();
     blogCreation({
-      title: newTitle,
-      author: newAuthor,
-      url: newURL,
-      likes: Number(newLikes),
+      title: title.value,
+      author: author.value,
+      url: url.value,
+      likes: 0,
     });
-
-    setNewTitle("");
-    setNewAuthor("");
-    setNewURL("");
-    setNewLikes(0);
   };
 
   return (
@@ -33,8 +27,8 @@ const BlogForm = ({ blogCreation }) => {
           id="title"
           size="small"
           margin="dense"
-          onChange={({ target }) => setNewTitle(target.value)}
-          value={newTitle}
+          onChange={title.onChange}
+          value={title.value}
         />{" "}
         <br></br>
         <TextField
@@ -44,8 +38,8 @@ const BlogForm = ({ blogCreation }) => {
           id="author"
           size="small"
           margin="dense"
-          onChange={({ target }) => setNewAuthor(target.value)}
-          value={newAuthor}
+          onChange={author.onChange}
+          value={author.value}
         />{" "}
         <br></br>
         <TextField
@@ -55,18 +49,10 @@ const BlogForm = ({ blogCreation }) => {
           size="small"
           margin="dense"
           id="url"
-          onChange={({ target }) => setNewURL(target.value)}
-          value={newURL}
+          onChange={url.onChange}
+          value={url.value}
         />{" "}
         <br></br>
-        {/* <label htmlFor="likes">Likes: </label>
-        <input
-          type="number"
-          name="likes"
-          id="likes"
-          onChange={({ target }) => setNewLikes(Number(target.value))}
-          value={newLikes}
-        /> */}
         <Button variant="contained" type="submit">
           Create
         </Button>
