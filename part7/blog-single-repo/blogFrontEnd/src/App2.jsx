@@ -71,7 +71,7 @@ const App2 = () => {
     try {
       const user = await loginServices.login({ username, password });
 
-      userServices.setUser("loggedBlogappUser", user);
+      userServices.saveUser("loggedBlogappUser", user);
       blogServices.setToken(user.token);
       setUser(user);
       notifiPositive("Successfully logged in");
