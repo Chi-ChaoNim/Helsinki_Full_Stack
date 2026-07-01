@@ -17,6 +17,9 @@ export const Header = ({ handleLogout }) => {
           <Button color="inherit" component={Link} to="/" sx={style}>
             Blogs
           </Button>
+          <Button color="inherit" component={Link} to="/users" sx={style}>
+            Users
+          </Button>
           {user && (
             <Button color="inherit" component={Link} to="/create" sx={style}>
               New blog
