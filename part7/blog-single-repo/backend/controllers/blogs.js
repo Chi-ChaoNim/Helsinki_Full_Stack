@@ -1,11 +1,14 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
+const Comment = require("../models/comment");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const middleware = require("../utils/middleware");
 
 blogsRouter.get("/", async (request, response) => {
-  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
+  const blogs = await Blog.find({})
+    .populate("user", { username: 1, name: 1 })
+    .populate("comments", { content: 1 });
   response.json(blogs);
 });
 
@@ -79,5 +82,33 @@ blogsRouter.put(
     }
   },
 );
+
+blogsRouter.put("/:id/comments", async (request, response) => {
+  const { content } = request.body;
+
+  if (!content || typeof content !== "string") {
+    return response.status(400).json({ error: "Comment content is required" });
+  }
+
+  const blog = await Blog.findById(request.params.id);
+  if (!blog) {
+    return response.status(404).end();
+  }
+
+  const comment = new Comment({
+    content,
+    blog: blog._id,
+  });
+
+  const savedComment = await comment.save();
+  blog.comments = blog.comments.concat(savedComment._id);
+  await blog.save();
+
+  const populatedBlog = await Blog.findById(blog._id)
+    .populate("user", { username: 1, name: 1 })
+    .populate("comments", { content: 1 });
+
+  response.status(201).json(populatedBlog);
+});
 
 module.exports = blogsRouter;
