@@ -1,10 +1,18 @@
 import { useParams } from "react-router-dom";
-import { Button } from "@mui/material";
-import { useContext } from "react";
+import { Button, TextField, List, ListItem } from "@mui/material";
+import { useContext, useState } from "react";
 import UserContext from "../UserContext";
 
-const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
-  const { user } = useContext(UserContext);
+const BlogEntry = ({
+  blogs,
+  handleLikes,
+  handleDelete,
+  handleComments,
+  user,
+}) => {
+  const userContext = useContext(UserContext) ?? {};
+  const currentUser = user ?? userContext.user;
+  const [commentText, setCommentText] = useState("");
   const id = useParams().id;
   const blog = blogs.find((b) => b.id === id);
   const blogStyle = {
@@ -15,11 +23,21 @@ const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
     marginBottom: 5,
   };
 
-  if (!user || !blog) {
+  if (!blog) {
     return <h2>404: Page not found</h2>;
   }
 
-  const isOwner = user && blog.user.username === user.username;
+  const isOwner = currentUser && blog.user.username === currentUser.username;
+  const comments = blog.comments ?? [];
+
+  const submitComment = (event) => {
+    event.preventDefault();
+    if (!commentText.trim()) {
+      return;
+    }
+    handleComments(event, commentText.trim(), blog);
+    setCommentText("");
+  };
 
   return (
     <div style={blogStyle} className="blog">
@@ -31,13 +49,13 @@ const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
         <br />
         Added by {blog.user.name} <br />
         <p>{blog.likes} likes</p>
-        {user && (
+        {currentUser && (
           <Button
             color="success"
             variant="outlined"
             style={{ marginLeft: 10, marginRight: 10 }}
-            onClick={() => {
-              handleLikes(blog);
+            onClick={(event) => {
+              handleLikes(event, blog);
             }}
           >
             Like
@@ -48,13 +66,32 @@ const BlogEntry = ({ blogs, handleLikes, handleDelete }) => {
             color="error"
             variant="outlined"
             style={{ marginLeft: 10, marginRight: 10 }}
-            onClick={() => {
-              handleDelete(blog);
+            onClick={(event) => {
+              handleDelete(event, blog);
             }}
           >
             Delete
           </Button>
         )}
+        <h2>Comments</h2>
+        <form onSubmit={submitComment}>
+          <TextField
+            variant="outlined"
+            value={commentText}
+            onChange={(event) => setCommentText(event.target.value)}
+            placeholder="Write a comment"
+          />
+          <Button type="submit" variant="outlined">
+            Add comment
+          </Button>
+        </form>
+        <List>
+          {comments.length > 0 ? (
+            comments.map((c) => <ListItem key={c.id}>{c.content}</ListItem>)
+          ) : (
+            <li>No comments yet</li>
+          )}
+        </List>
       </div>
       <br />
     </div>

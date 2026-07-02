@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { List, ListItem } from "@mui/material";
 
 const UserEntry = ({ users }) => {
   const id = useParams().id;
@@ -12,9 +13,11 @@ const UserEntry = ({ users }) => {
     <div>
       <h2>{user.name}</h2>
       <h4>Added blogs:</h4>
-      {user.blogs.map((b) => (
-        <li key={b.id}>{b.title}</li>
-      ))}
+      <List>
+        {user.blogs.map((b) => (
+          <ListItem key={b.id}>{b.title}</ListItem>
+        ))}
+      </List>
     </div>
   );
 };

@@ -73,6 +73,18 @@ const App2 = () => {
     },
   });
 
+  const commentBlogMutation = useMutation({
+    mutationFn: ({ comment, blogId }) =>
+      blogServices.commentBlog({ content: comment }, blogId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      notifiPositive("Successfully commented on blog");
+    },
+    onError: (error) => {
+      notifiNegative("Failed to comment", error);
+    },
+  });
+
   const navigate = useNavigate();
 
   const handleLogin = async ({ username, password }) => {
@@ -101,7 +113,7 @@ const App2 = () => {
     navigate("/");
   };
 
-  const handleLikes = (blog) => {
+  const handleLikes = (event, blog) => {
     event.preventDefault();
     const updatedObject = {
       ...blog,
@@ -110,7 +122,7 @@ const App2 = () => {
     likeBlogMutation.mutate(updatedObject);
   };
 
-  const handleDelete = (blogToDelete) => {
+  const handleDelete = (event, blogToDelete) => {
     event.preventDefault();
     if (
       window.confirm(
@@ -120,6 +132,11 @@ const App2 = () => {
       deleteBlogMutation.mutate(blogToDelete);
       navigate("/");
     }
+  };
+
+  const handleComments = (event, comment, blog) => {
+    event.preventDefault();
+    commentBlogMutation.mutate({ comment, blogId: blog.id });
   };
 
   if (blogsResult.isPending || usersResult.isPending) {
@@ -165,6 +182,7 @@ const App2 = () => {
                 blogs={blogsList}
                 handleLikes={handleLikes}
                 handleDelete={handleDelete}
+                handleComments={handleComments}
               />
             </ErrorBoundary>
           }
