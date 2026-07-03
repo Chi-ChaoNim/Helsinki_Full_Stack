@@ -18,15 +18,15 @@ jobs:
           node-version: "24"
 
       - name: Install healthapp dependencies
-        working-directory: ./part9/fs-typescript/healthapp-tests
+        working-directory: ./part9/fs-typescript/healthapp
         run: npm install
 
       - name: Lint healthapp
-        working-directory: ./part9/fs-typescript/healthapp-tests
+        working-directory: ./part9/fs-typescript/healthapp
         run: npm run lint
 
       - name: Start healthapp server
-        working-directory: ./part9/fs-typescript/healthapp-tests
+        working-directory: ./part9/fs-typescript/healthapp
         run: |
           npm start &
           echo $! > server.pid
@@ -54,7 +54,7 @@ jobs:
 
       - name: Stop healthapp server
         if: always()
-        working-directory: ./part9/fs-typescript/healthapp-tests
+        working-directory: ./part9/fs-typescript/healthapp
         run: |
           if [ -f server.pid ]; then
             kill $(cat server.pid) || true
