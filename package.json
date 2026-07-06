@@ -6,9 +6,11 @@
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.3",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "uuid": "^14.0.1"
   }
 }
