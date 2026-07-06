@@ -1,7 +1,12 @@
-import express, { type Response } from "express";
+import express, { type Response, type Request } from "express";
+
 import patientService from "../services/patientService.ts";
-import parseNewPatientEntry from "../utils.ts";
-import type { NonSSNPatient } from "../../types.ts";
+import {
+  type NewPatient,
+  type NonSSNPatient,
+  type Patient,
+} from "../../types.ts";
+import { errorMiddleware, newPatientParser } from "../middleware.ts";
 
 const router = express.Router();
 
@@ -10,18 +15,15 @@ router.get("/", (_req, res: Response<NonSSNPatient[]>) => {
   res.send(data);
 });
 
-router.post("/", (req, res) => {
-  try {
-    const newPatientEntry = parseNewPatientEntry(req.body);
-    const addedPatient = patientService.addPatient(newPatientEntry);
-    res.json(addedPatient);
-  } catch (error: unknown) {
-    let errorMessage = "Something went wrong.";
-    if (error instanceof Error) {
-      errorMessage += " Error: " + errorMessage;
-    }
-    res.status(400).send(errorMessage);
-  }
-});
+router.post(
+  "/",
+  newPatientParser,
+  (req: Request<unknown, unknown, NewPatient>, res: Response<Patient>) => {
+    const addedEntry = patientService.addPatient(req.body);
+    res.json(addedEntry);
+  },
+);
+
+router.use(errorMiddleware);
 
 export default router;
