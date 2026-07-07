@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/json-server/schema.json",
+  "notes": [
+    {
+      "id": "1",
+      "content": "testing"
+    }
+  ]
+}
