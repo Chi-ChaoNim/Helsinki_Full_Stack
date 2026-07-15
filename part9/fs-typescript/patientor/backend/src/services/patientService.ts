@@ -4,8 +4,10 @@ import { v1 as uuid } from "uuid";
 
 const id: string = uuid();
 
+const patients = patientData;
+
 const getPatient = (): Patient[] => {
-  return patientData;
+  return patients;
 };
 
 const getNonSSNPatient = (): NonSSNPatient[] => {
@@ -21,14 +23,21 @@ const getNonSSNPatient = (): NonSSNPatient[] => {
 const addPatient = (entry: NewPatient): Patient => {
   const newPatientEntry: Patient = {
     id,
+    entries: [],
     ...entry,
   };
   patientData.push(newPatientEntry);
   return newPatientEntry;
 };
 
+const findById = (id: string): Patient | undefined => {
+  const entry = patients.find((p) => p.id === id);
+  return entry;
+};
+
 export default {
   getPatient,
   getNonSSNPatient,
   addPatient,
+  findById,
 };

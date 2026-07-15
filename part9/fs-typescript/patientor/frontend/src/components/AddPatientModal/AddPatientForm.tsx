@@ -1,35 +1,44 @@
 import { useState, SyntheticEvent } from "react";
 
-import {  TextField, InputLabel, MenuItem, Select, Grid, Button, SelectChangeEvent } from '@mui/material';
+import {
+  TextField,
+  InputLabel,
+  MenuItem,
+  Select,
+  Grid,
+  Button,
+  SelectChangeEvent,
+} from "@mui/material";
 
-import { PatientFormValues, Gender } from "../../types";
+import { PatientFormValues, Gender } from "../../../../backend/types";
 
 interface Props {
   onCancel: () => void;
   onSubmit: (values: PatientFormValues) => void;
 }
 
-interface GenderOption{
+interface GenderOption {
   value: Gender;
   label: string;
 }
 
-const genderOptions: GenderOption[] = Object.values(Gender).map(v => ({
-  value: v, label: v.toString()
+const genderOptions: GenderOption[] = Object.values(Gender).map((v) => ({
+  value: v,
+  label: v.toString(),
 }));
 
 const AddPatientForm = ({ onCancel, onSubmit }: Props) => {
-  const [name, setName] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [ssn, setSsn] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [name, setName] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [ssn, setSsn] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState(Gender.Other);
 
   const onGenderChange = (event: SelectChangeEvent<string>) => {
     event.preventDefault();
-    if ( typeof event.target.value === "string") {
+    if (typeof event.target.value === "string") {
       const value = event.target.value;
-      const gender = Object.values(Gender).find(g => g.toString() === value);
+      const gender = Object.values(Gender).find((g) => g.toString() === value);
       if (gender) {
         setGender(gender);
       }
@@ -43,7 +52,7 @@ const AddPatientForm = ({ onCancel, onSubmit }: Props) => {
       occupation,
       ssn,
       dateOfBirth,
-      gender
+      gender,
     });
   };
 
@@ -52,7 +61,7 @@ const AddPatientForm = ({ onCancel, onSubmit }: Props) => {
       <form onSubmit={addPatient}>
         <TextField
           label="Name"
-          fullWidth 
+          fullWidth
           value={name}
           onChange={({ target }) => setName(target.value)}
         />
@@ -83,14 +92,11 @@ const AddPatientForm = ({ onCancel, onSubmit }: Props) => {
           value={gender}
           onChange={onGenderChange}
         >
-        {genderOptions.map(option =>
-          <MenuItem
-            key={option.label}
-            value={option.value}
-          >
-            {option.label
-          }</MenuItem>
-        )}
+          {genderOptions.map((option) => (
+            <MenuItem key={option.label} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
         </Select>
 
         <Grid container justifyContent="space-between" sx={{ marginTop: 2 }}>
@@ -105,10 +111,7 @@ const AddPatientForm = ({ onCancel, onSubmit }: Props) => {
             </Button>
           </Grid>
           <Grid size="auto">
-            <Button
-              type="submit"
-              variant="contained"
-            >
+            <Button type="submit" variant="contained">
               Add
             </Button>
           </Grid>

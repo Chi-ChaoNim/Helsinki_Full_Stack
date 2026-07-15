@@ -3,15 +3,30 @@ import express, { type Response, type Request } from "express";
 import patientService from "../services/patientService.ts";
 import {
   type NewPatient,
-  type NonSSNPatient,
+  // type NonSSNPatient,
   type Patient,
 } from "../../types.ts";
 import { errorMiddleware, newPatientParser } from "../middleware.ts";
 
 const router = express.Router();
 
-router.get("/", (_req, res: Response<NonSSNPatient[]>) => {
-  const data = patientService.getNonSSNPatient();
+// router.get("/", (_req, res: Response<NonSSNPatient[]>) => {
+//   const data = patientService.getNonSSNPatient();
+//   res.send(data);
+// });
+
+router.get("/:id", (req, res) => {
+  const patient = patientService.findById(req.params.id);
+
+  if (patient) {
+    res.send(patient);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+router.get("/", (_req, res: Response<Patient[]>) => {
+  const data = patientService.getPatient();
   res.send(data);
 });
 
