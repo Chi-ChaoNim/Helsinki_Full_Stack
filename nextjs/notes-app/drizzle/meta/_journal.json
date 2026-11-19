@@ -8,6 +8,27 @@
       "when": 1795081966814,
       "tag": "0000_smooth_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795089296829,
+      "tag": "0001_unique_gideon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795090257763,
+      "tag": "0002_cooing_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795099051520,
+      "tag": "0003_volatile_the_liberteens",
+      "breakpoints": true
     }
   ]
 }
