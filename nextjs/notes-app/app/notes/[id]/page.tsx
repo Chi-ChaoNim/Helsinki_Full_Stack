@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getNoteById } from "../../services/notes";
 import { toggleNoteImportance } from "@/app/actions/notes";
+import { Suspense } from "react";
 
 const Note = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -27,7 +28,9 @@ const Note = async ({ params }: { params: Promise<{ id: string }> }) => {
 const NotePage = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div>
-      <Note params={params} />
+      <Suspense>
+        <Note params={params} />
+      </Suspense>
     </div>
   );
 };
