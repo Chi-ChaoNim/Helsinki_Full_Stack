@@ -28,7 +28,7 @@ const Note = async ({ params }: { params: Promise<{ id: string }> }) => {
 const NotePage = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div>
-      <Suspense>
+      <Suspense fallback={<p>Loading note...</p>}>
         <Note params={params} />
       </Suspense>
     </div>
