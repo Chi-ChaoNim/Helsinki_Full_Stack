@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getNoteById } from "../../services/notes";
 import { toggleNoteImportance } from "@/app/actions/notes";
 
-const NotePage = async ({ params }: { params: Promise<{ id: string }> }) => {
+const Note = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const note = getNoteById(Number(id));
 
@@ -20,6 +20,14 @@ const NotePage = async ({ params }: { params: Promise<{ id: string }> }) => {
           {note.important ? "Mark as not important" : "Mark as important"}
         </button>
       </form>
+    </div>
+  );
+};
+
+const NotePage = ({ params }: { params: Promise<{ id: string }> }) => {
+  return (
+    <div>
+      <Note params={params} />
     </div>
   );
 };
