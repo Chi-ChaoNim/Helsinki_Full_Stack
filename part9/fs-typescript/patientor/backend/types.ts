@@ -6,7 +6,7 @@ export const Gender = {
   Other: "other",
 } as const;
 
-export const NewEntrySchema = z.object({
+export const NewPatientSchema = z.object({
   name: z.string(),
   dateOfBirth: z.iso.date(),
   ssn: z.string(),
@@ -18,7 +18,7 @@ export type Gender = (typeof Gender)[keyof typeof Gender];
 
 export type NonSSNPatient = Omit<Patient, "ssn" | "entries">;
 
-export type NewPatient = z.infer<typeof NewEntrySchema>;
+export type NewPatient = z.infer<typeof NewPatientSchema>;
 
 export interface Patient extends NewPatient {
   id: string;
@@ -27,19 +27,30 @@ export interface Patient extends NewPatient {
 
 export type PatientFormValues = Omit<Patient, "id" | "entries">;
 
-interface BaseEntry {
-  id: string;
-  description: string;
-  date: string;
-  specialist: string;
-  diagnosisCodes?: Array<Diagnosis["code"]>;
-}
-
 export type Diagnosis = {
   code: string;
   name: string;
   latin?: string;
 };
+
+export const NewEntrySchema = z.object({
+  description: z.string(),
+  date: z.iso.date(),
+  specialist: z.string(),
+  diagnosisCodes: z.array(z.string()).optional(),
+});
+
+export interface NewEntry {
+  description: string;
+  date: string;
+  specialist: string;
+  type: string | undefined;
+  diagnosisCodes?: Array<Diagnosis["code"]>;
+}
+
+interface BaseEntry extends NewEntry {
+  id: string;
+}
 
 const HealthCheckRating = {
   Healthy: 0,

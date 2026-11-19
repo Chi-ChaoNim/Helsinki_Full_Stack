@@ -24,7 +24,7 @@ export const PatientDetail = ({
     switch (entry.type) {
       case "HealthCheck":
         return (
-          <List key={entry.id}>
+          <List key={entry.id} sx={{ border: 1 }}>
             <ListItem>
               {entry.date} <Medication />
             </ListItem>
@@ -35,7 +35,7 @@ export const PatientDetail = ({
         );
       case "Hospital":
         return (
-          <List key={entry.id}>
+          <List key={entry.id} sx={{ border: 1 }}>
             <ListItem>
               {entry.date} <LocalHospital />
             </ListItem>
@@ -45,9 +45,9 @@ export const PatientDetail = ({
         );
       case "OccupationalHealthcare":
         return (
-          <List key={entry.id}>
+          <List key={entry.id} sx={{ border: 1 }}>
             <ListItem>
-              {entry.date} <Masks />
+              {entry.date} <Masks /> {entry.employerName}
             </ListItem>
             <ListItem>{entry.description}</ListItem>
             <ListItem>Diagnosed by: {entry.specialist}</ListItem>
@@ -72,7 +72,7 @@ export const PatientDetail = ({
   return (
     <div>
       <h3>Patient entries</h3>
-      <List>
+      <List sx={{}}>
         {patient.entries.map((e) => {
           return EntryDetails(e);
         })}

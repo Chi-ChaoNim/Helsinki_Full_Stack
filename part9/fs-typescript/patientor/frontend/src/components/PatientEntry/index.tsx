@@ -1,5 +1,7 @@
+import { useState } from "react";
+
 import { useParams } from "react-router-dom";
-import { List, ListItem } from "@mui/material";
+import { Button, List, ListItem } from "@mui/material";
 import { Male, Female } from "@mui/icons-material";
 
 import { type Patient, Diagnosis } from "../../../../backend/types.ts";
@@ -13,6 +15,8 @@ export const PatientEntry = ({
   patientList: Patient[];
   diagnosisCodes: Diagnosis[];
 }) => {
+  const [visible, setVisible] = useState(false);
+
   const id = useParams().id;
   const patient = patientList.find((p) => p.id === id);
 
@@ -34,6 +38,25 @@ export const PatientEntry = ({
         <PatientDetail patient={patient} diagnosisCodes={diagnosisCodes} />
       ) : (
         <h3>No entries added</h3>
+      )}
+      {!visible ? (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setVisible(!visible)}
+        >
+          Add patient record
+        </Button>
+      ) : (
+        <form>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setVisible(!visible)}
+          >
+            Add
+          </Button>
+        </form>
       )}
     </div>
   );
